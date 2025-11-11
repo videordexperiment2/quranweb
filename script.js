@@ -14,15 +14,13 @@ class QuranApp {
 
     async loadQuranData() {
         try {
-            // Menampilkan loading
             document.getElementById('surahGrid').innerHTML = `
                 <div class="loading">
                     <div class="spinner"></div>
-                    <p>Memuat data Al-Quran dari GitHub...</p>
+                    <p>Memuat data Al-Quran...</p>
                 </div>
             `;
 
-            // Coba load data dari GitHub
             const response = await fetch('https://raw.githubusercontent.com/urangbandung/quran/main/data/quran.json');
             
             if (!response.ok) {
@@ -30,37 +28,101 @@ class QuranApp {
             }
             
             const rawData = await response.json();
+            console.log('Raw data structure:', rawData); // Debug
+            
             this.surahs = this.processQuranData(rawData);
             this.filteredSurahs = [...this.surahs];
             
+            console.log('Processed surahs:', this.surahs); // Debug
+            
         } catch (error) {
             console.error('Error loading Quran data:', error);
-            // Fallback ke data dummy jika gagal
             this.loadDummyData();
         }
     }
 
     processQuranData(rawData) {
         try {
-            // Proses data dari urangbandung/quran
-            return rawData.map((surah, index) => {
-                // Pastikan struktur data sesuai
-                const surahNumber = surah.number || surah.nomor || (index + 1);
+            // Coba berbagai kemungkinan struktur data
+            let surahsData = [];
+            
+            // Jika rawData adalah array langsung
+            if (Array.isArray(rawData)) {
+                surahsData = rawData;
+            }
+            // Jika rawData memiliki properti tertentu
+            else if (rawData.surahs) {
+                surahsData = rawData.surahs;
+            }
+            else if (rawData.data) {
+                surahsData = rawData.data;
+            }
+            else {
+                // Coba asumsi rawData itu sendiri adalah objek surah
+                surahsData = [rawData];
+            }
+
+            console.log('Surahs data:', surahsData); // Debug
+
+            return surahsData.map((surah, index) => {
+                // Debug setiap surah
+                console.log(`Processing surah ${index}:`, surah);
                 
+                // Coba berbagai kemungkinan properti
+                const number = surah.number || surah.nomor || surah.id || (index + 1);
+                const name = surah.name || surah.nama || surah.englishName || surah.title || `Surah ${number}`;
+                const name_arabic = surah.name_arabic || surah.arabic_name || surah.nama_arab || 'القرآن';
+                const ayah_count = surah.ayah_count || surah.number_of_ayah || surah.ayahs?.length || surah.verses?.length || 0;
+                
+                // Coba dapatkan terjemahan
+                let translation_id = 'Terjemahan tidak tersedia';
+                if (surah.translation) {
+                    translation_id = surah.translation;
+                } else if (surah.arti) {
+                    translation_id = surah.arti;
+                } else if (surah.name_translations?.id) {
+                    translation_id = surah.name_translations.id;
+                } else if (typeof surah.translation === 'string') {
+                    translation_id = surah.translation;
+                }
+
+                // Tentukan tipe surah
+                let type_id = 'Makkiyah';
+                if (surah.type) {
+                    if (typeof surah.type === 'string') {
+                        type_id = surah.type.includes('madani') || surah.type.includes('madinah') ? 'Madaniyah' : 'Makkiyah';
+                    } else if (surah.type.id) {
+                        type_id = surah.type.id.includes('madani') ? 'Madaniyah' : 'Makkiyah';
+                    }
+                }
+
+                // Proses ayat-ayat
+                let verses = [];
+                if (surah.verses || surah.ayahs) {
+                    const ayahs = surah.verses || surah.ayahs;
+                    if (Array.isArray(ayahs)) {
+                        verses = ayahs.map((ayah, ayahIndex) => ({
+                            number: ayah.number || ayah.ayah_number || (ayahIndex + 1),
+                            text: ayah.text || ayah.arabic_text || ayah.ayah || '',
+                            translation_id: ayah.translation || ayah.translation_id || ayah.indo || ''
+                        }));
+                    }
+                }
+
                 return {
-                    number: parseInt(surahNumber),
-                    name: surah.name || surah.nama || surah.english_name || `Surah ${surahNumber}`,
-                    name_arabic: surah.name_arabic || surah.nama_arabic || 'القرآن',
+                    number: parseInt(number),
+                    name: name,
+                    name_arabic: name_arabic,
                     name_translations: {
-                        id: surah.name_translations?.id || surah.arti || surah.translation || `Surah ${surahNumber}`,
-                        en: surah.name_translations?.en || surah.name || surah.english_name || `Surah ${surahNumber}`
+                        id: translation_id,
+                        en: name
                     },
-                    number_of_ayah: surah.number_of_ayah || surah.ayah_count || surah.jumlah_ayat || 0,
+                    number_of_ayah: parseInt(ayah_count),
                     type: {
-                        id: surah.type?.id || surah.tempat_turun || surah.revelation_type || 'Makkiyah',
-                        en: surah.type?.en || surah.type || surah.revelation_type || 'Meccan'
+                        id: type_id,
+                        en: type_id === 'Madaniyah' ? 'Medinan' : 'Meccan'
                     },
-                    verses: surah.verses || surah.ayahs || []
+                    verses: verses
                 };
             });
         } catch (error) {
@@ -70,34 +132,14 @@ class QuranApp {
     }
 
     loadDummyData() {
-        this.surahs = this.getDummySurahs();
-        this.filteredSurahs = [...this.surahs];
-        
-        document.getElementById('surahGrid').innerHTML = `
-            <div class="no-results">
-                <p>⚠️ Menggunakan data demo karena masalah koneksi</p>
-                <p>Silakan refresh halaman beberapa saat lagi</p>
-            </div>
-        `;
-        
-        setTimeout(() => this.displaySurahList(), 2000);
-    }
-
-    getDummySurahs() {
-        return [
+        const dummySurahs = [
             {
                 number: 1,
                 name: "Al-Fatihah",
                 name_arabic: "الفاتحة",
-                name_translations: { 
-                    id: "Pembukaan", 
-                    en: "The Opening" 
-                },
+                name_translations: { id: "Pembukaan", en: "The Opening" },
                 number_of_ayah: 7,
-                type: { 
-                    id: "Makkiyah", 
-                    en: "Meccan" 
-                },
+                type: { id: "Makkiyah", en: "Meccan" },
                 verses: [
                     {
                         number: 1,
@@ -113,6 +155,26 @@ class QuranApp {
                         number: 3,
                         text: "الرَّحْمَٰنِ الرَّحِيمِ",
                         translation_id: "Yang Maha Pengasih, Maha Penyayang,"
+                    },
+                    {
+                        number: 4,
+                        text: "مَالِكِ يَوْمِ الدِّينِ",
+                        translation_id: "Pemilik hari pembalasan."
+                    },
+                    {
+                        number: 5,
+                        text: "إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ",
+                        translation_id: "Hanya kepada Engkaulah kami menyembah dan hanya kepada Engkaulah kami mohon pertolongan."
+                    },
+                    {
+                        number: 6,
+                        text: "اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ",
+                        translation_id: "Tunjukilah kami jalan yang lurus,"
+                    },
+                    {
+                        number: 7,
+                        text: "صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ",
+                        translation_id: "(yaitu) jalan orang-orang yang telah Engkau beri nikmat; bukan (jalan) mereka yang dimurkai dan bukan pula (jalan) mereka yang sesat."
                     }
                 ]
             },
@@ -120,33 +182,33 @@ class QuranApp {
                 number: 2,
                 name: "Al-Baqarah",
                 name_arabic: "البقرة",
-                name_translations: { 
-                    id: "Sapi Betina", 
-                    en: "The Cow" 
-                },
+                name_translations: { id: "Sapi Betina", en: "The Cow" },
                 number_of_ayah: 286,
-                type: { 
-                    id: "Madaniyah", 
-                    en: "Medinan" 
-                },
+                type: { id: "Madaniyah", en: "Medinan" },
                 verses: []
             },
             {
                 number: 3,
                 name: "Ali 'Imran",
                 name_arabic: "آل عمران",
-                name_translations: { 
-                    id: "Keluarga Imran", 
-                    en: "Family of Imran" 
-                },
+                name_translations: { id: "Keluarga Imran", en: "Family of Imran" },
                 number_of_ayah: 200,
-                type: { 
-                    id: "Madaniyah", 
-                    en: "Medinan" 
-                },
+                type: { id: "Madaniyah", en: "Medinan" },
                 verses: []
             }
         ];
+
+        this.surahs = dummySurahs;
+        this.filteredSurahs = [...dummySurahs];
+        
+        document.getElementById('surahGrid').innerHTML = `
+            <div class="no-results">
+                <p>⚠️ Menampilkan data demo karena struktur data tidak sesuai</p>
+                <p>Silakan periksa console browser untuk detail error</p>
+            </div>
+        `;
+        
+        setTimeout(() => this.displaySurahList(), 2000);
     }
 
     setupEventListeners() {
@@ -181,8 +243,7 @@ class QuranApp {
                 surah.name.toLowerCase().includes(searchTerm) ||
                 surah.name_translations.id.toLowerCase().includes(searchTerm) ||
                 surah.name_arabic.includes(query) ||
-                surah.number.toString().includes(query) ||
-                surah.name_translations.en.toLowerCase().includes(searchTerm)
+                surah.number.toString().includes(query)
             );
         }
         this.displaySurahList();
@@ -195,7 +256,6 @@ class QuranApp {
             surahGrid.innerHTML = `
                 <div class="no-results">
                     <p>🔍 Tidak ditemukan surah yang cocok</p>
-                    <p>Coba kata kunci lain seperti "fatihah" atau "1"</p>
                 </div>
             `;
             return;
@@ -204,51 +264,41 @@ class QuranApp {
         surahGrid.innerHTML = this.filteredSurahs.map(surah => `
             <div class="surah-card" onclick="quranApp.showSurahDetail(${surah.number})">
                 <div class="surah-number">${surah.number}</div>
-                <div class="surah-name-ar">${surah.name_arabic || 'القرآن'}</div>
-                <div class="surah-name-id">${surah.name_translations?.id || surah.name || 'Surah'}</div>
+                <div class="surah-name-ar">${surah.name_arabic}</div>
+                <div class="surah-name-id">${surah.name_translations.id}</div>
                 <div class="surah-info">
-                    <span>${surah.number_of_ayah || 0} Ayat</span>
-                    <span>${this.formatRevelationType(surah.type?.id) || 'Makkiyah'}</span>
+                    <span>${surah.number_of_ayah} Ayat</span>
+                    <span>${surah.type.id}</span>
                 </div>
             </div>
         `).join('');
-    }
-
-    formatRevelationType(type) {
-        if (!type) return 'Makkiyah';
-        if (type.toLowerCase().includes('madani')) return 'Madaniyah';
-        if (type.toLowerCase().includes('mekkah') || type.toLowerCase().includes('makki')) return 'Makkiyah';
-        return type;
     }
 
     async showSurahDetail(surahNumber) {
         this.currentSurah = this.surahs.find(s => s.number === surahNumber);
         
         if (!this.currentSurah) {
-            // Jika tidak ditemukan, gunakan dummy
-            this.currentSurah = this.getDummySurahs().find(s => s.number === surahNumber) || this.getDummySurahs()[0];
+            this.loadDummyData();
+            this.currentSurah = this.surahs.find(s => s.number === surahNumber);
         }
 
-        // Hide surah list and show detail
         document.getElementById('surahList').style.display = 'none';
         document.getElementById('surahDetail').style.display = 'block';
 
-        // Display surah header
         document.getElementById('surahTitle').innerHTML = `
-            ${this.currentSurah.name_arabic || 'القرآن'}<br>
+            ${this.currentSurah.name_arabic}<br>
             <span style="font-size: 1.2rem; font-family: 'Roboto', sans-serif; color: #666;">
-                ${this.currentSurah.name_translations?.id || this.currentSurah.name || 'Surah'}
+                ${this.currentSurah.name_translations.id}
             </span>
         `;
         
         document.getElementById('surahInfo').innerHTML = `
             <div class="surah-info-detail">
-                <p>${this.currentSurah.number_of_ayah || 0} Ayat • ${this.formatRevelationType(this.currentSurah.type?.id) || 'Makkiyah'}</p>
-                <p style="margin-top: 10px; font-style: italic;">"${this.currentSurah.name_translations?.en || this.currentSurah.name || 'Surah'}"</p>
+                <p>${this.currentSurah.number_of_ayah} Ayat • ${this.currentSurah.type.id}</p>
+                <p style="margin-top: 10px; font-style: italic;">"${this.currentSurah.name_translations.en}"</p>
             </div>
         `;
 
-        // Display verses
         this.displayVerses();
     }
 
@@ -256,10 +306,26 @@ class QuranApp {
         const versesContainer = document.getElementById('versesContainer');
         
         if (!this.currentSurah.verses || this.currentSurah.verses.length === 0) {
+            if (this.currentSurah.number === 1) {
+                // Tampilkan Al-Fatihah dari dummy data
+                const dummySurah = this.getDummySurahForDetail(this.currentSurah.number);
+                if (dummySurah) {
+                    versesContainer.innerHTML = dummySurah.verses.map(verse => `
+                        <div class="verse">
+                            <div class="verse-header">
+                                <div class="verse-number">${verse.number}</div>
+                            </div>
+                            <div class="verse-text-ar">${verse.text}</div>
+                            <div class="verse-text-id">${verse.translation_id}</div>
+                        </div>
+                    `).join('');
+                    return;
+                }
+            }
+            
             versesContainer.innerHTML = `
                 <div class="no-results">
-                    <p>📝 Ayat-ayat untuk surah ini belum tersedia</p>
-                    <p>Data lengkap akan ditambahkan dalam update berikutnya</p>
+                    <p>📝 Detail ayat belum tersedia untuk surah ini</p>
                 </div>
             `;
             return;
@@ -268,12 +334,59 @@ class QuranApp {
         versesContainer.innerHTML = this.currentSurah.verses.map(verse => `
             <div class="verse">
                 <div class="verse-header">
-                    <div class="verse-number">${verse.number || verse.ayah_number || ''}</div>
+                    <div class="verse-number">${verse.number}</div>
                 </div>
-                <div class="verse-text-ar">${verse.text || verse.ayah_text || 'القرآن'}</div>
-                ${verse.translation_id ? `<div class="verse-text-id">${verse.translation_id}</div>` : ''}
+                <div class="verse-text-ar">${verse.text}</div>
+                <div class="verse-text-id">${verse.translation_id}</div>
             </div>
         `).join('');
+    }
+
+    getDummySurahForDetail(surahNumber) {
+        const dummySurahs = [
+            {
+                number: 1,
+                verses: [
+                    {
+                        number: 1,
+                        text: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
+                        translation_id: "Dengan nama Allah Yang Maha Pengasih, Maha Penyayang."
+                    },
+                    {
+                        number: 2,
+                        text: "الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ",
+                        translation_id: "Segala puji bagi Allah, Tuhan seluruh alam,"
+                    },
+                    {
+                        number: 3,
+                        text: "الرَّحْمَٰنِ الرَّحِيمِ",
+                        translation_id: "Yang Maha Pengasih, Maha Penyayang,"
+                    },
+                    {
+                        number: 4,
+                        text: "مَالِكِ يَوْمِ الدِّينِ",
+                        translation_id: "Pemilik hari pembalasan."
+                    },
+                    {
+                        number: 5,
+                        text: "إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ",
+                        translation_id: "Hanya kepada Engkaulah kami menyembah dan hanya kepada Engkaulah kami mohon pertolongan."
+                    },
+                    {
+                        number: 6,
+                        text: "اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ",
+                        translation_id: "Tunjukilah kami jalan yang lurus,"
+                    },
+                    {
+                        number: 7,
+                        text: "صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ",
+                        translation_id: "(yaitu) jalan orang-orang yang telah Engkau beri nikmat; bukan (jalan) mereka yang dimurkai dan bukan pula (jalan) mereka yang sesat."
+                    }
+                ]
+            }
+        ];
+        
+        return dummySurahs.find(s => s.number === surahNumber);
     }
 
     showSurahList() {
@@ -283,30 +396,36 @@ class QuranApp {
         this.filteredSurahs = [...this.surahs];
         this.displaySurahList();
     }
+
+    getDummySurahs() {
+        return [
+            {
+                number: 1,
+                name: "Al-Fatihah",
+                name_arabic: "الفاتحة",
+                name_translations: { id: "Pembukaan", en: "The Opening" },
+                number_of_ayah: 7,
+                type: { id: "Makkiyah", en: "Meccan" },
+                verses: []
+            },
+            {
+                number: 2,
+                name: "Al-Baqarah",
+                name_arabic: "البقرة",
+                name_translations: { id: "Sapi Betina", en: "The Cow" },
+                number_of_ayah: 286,
+                type: { id: "Madaniyah", en: "Medinan" },
+                verses: []
+            }
+        ];
+    }
 }
-// Fungsi debugging untuk melihat struktur data
-function debugQuranData() {
-    fetch('https://raw.githubusercontent.com/urangbandung/quran/main/data/quran.json')
-        .then(response => response.json())
-        .then(data => {
-            console.log('Struktur data dari repository:');
-            console.log('Jumlah surah:', data.length);
-            console.log('Contoh data pertama:', data[0]);
-            console.log('Struktur lengkap:', data);
-        })
-        .catch(error => {
-            console.error('Debug error:', error);
-        });
-}
+
 // Initialize the app
 let quranApp;
 
-// Debug: Tampilkan info di console
-console.log('Menginisialisasi Al-Quran Digital...');
-console.log('Sumber data: https://github.com/urangbandung/quran');
-
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('Initializing Quran App...');
+    console.log('Fetching data from: https://raw.githubusercontent.com/urangbandung/quran/main/data/quran.json');
     quranApp = new QuranApp();
-    // Uncomment baris di bawah untuk debugging
-    // debugQuranData();
 });
