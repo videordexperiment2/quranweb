@@ -3,49 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Al-Quran Digital</title>
+    <title>Web Quran - Baca Al-Quran Online</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <header>
-        <h1>📖 Al-Quran Digital</h1>
-        <p class="subtitle">القرآن الكريم</p>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <h1 class="logo">📖 Web Quran</h1>
+                <nav class="nav">
+                    <button class="nav-btn active" data-view="surah">Surah</button>
+                    <button class="nav-btn" data-view="juz">Juz</button>
+                    <button class="nav-btn" data-view="bookmark">Bookmark</button>
+                </nav>
+            </div>
+        </div>
     </header>
 
-    <main>
-        <!-- Search Section -->
-        <section class="search-section">
-            <div class="search-container">
-                <input type="text" id="searchInput" placeholder="Cari surah...">
-                <button id="searchBtn">🔍</button>
-            </div>
-        </section>
+    <!-- Search Bar -->
+    <div class="search-container">
+        <div class="container">
+            <input type="text" id="searchInput" placeholder="Cari surah..." class="search-input">
+        </div>
+    </div>
 
-        <!-- Surah List -->
-        <section class="surah-list" id="surahList">
-            <h2>Daftar Surah</h2>
-            <div class="surah-grid" id="surahGrid">
-                <!-- Surah cards will be loaded here -->
-            </div>
-        </section>
+    <!-- Loading Spinner -->
+    <div id="loading" class="loading-spinner">
+        <div class="spinner"></div>
+    </div>
 
-        <!-- Surah Detail -->
-        <section class="surah-detail" id="surahDetail" style="display: none;">
-            <div class="surah-header">
-                <button id="backBtn" class="back-btn">← Kembali</button>
-                <h2 id="surahTitle"></h2>
-                <div class="surah-info" id="surahInfo"></div>
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Surah List View -->
+            <div id="surahList" class="surah-list view-content active"></div>
+
+            <!-- Juz List View -->
+            <div id="juzList" class="juz-list view-content"></div>
+
+            <!-- Bookmark View -->
+            <div id="bookmarkList" class="bookmark-list view-content">
+                <div class="empty-state">
+                    <p>📑 Belum ada bookmark</p>
+                </div>
             </div>
-            <div class="verses-container" id="versesContainer">
-                <!-- Verses will be loaded here -->
+
+            <!-- Surah Detail View -->
+            <div id="surahDetail" class="surah-detail" style="display: none;">
+                <button class="back-btn" onclick="backToList()">← Kembali</button>
+                <div class="surah-header">
+                    <h2 id="surahTitle"></h2>
+                    <p id="surahInfo"></p>
+                </div>
+                <div class="audio-controls">
+                    <audio id="audioPlayer" controls></audio>
+                    <select id="qariSelect" class="qari-select">
+                        <option value="01">Abdul Basit Abdul Samad</option>
+                        <option value="02">Abdul Rahman Al-Sudais</option>
+                        <option value="03">Mishary Rashid Alafasy</option>
+                        <option value="04">Mahmoud Khalil Al-Hussary</option>
+                        <option value="05">Mohamed Siddiq Al-Minshawi</option>
+                    </select>
+                </div>
+                <div id="ayatList" class="ayat-list"></div>
             </div>
-        </section>
+        </div>
     </main>
 
-    <footer>
-        <p>© 2024 Al-Quran Digital | Sumber Data: urangbandung/quran</p>
-    </footer>
+    <!-- Modal untuk Tafsir -->
+    <div id="tafsirModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeTafsir()">&times;</span>
+            <h3>Tafsir</h3>
+            <div id="tafsirContent"></div>
+        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>

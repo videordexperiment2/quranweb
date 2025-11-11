@@ -1,544 +1,446 @@
-class QuranApp {
-    constructor() {
-        this.surahs = [];
-        this.filteredSurahs = [];
-        this.currentSurah = null;
-        this.init();
-    }
+// API Base URL
+const API_BASE = 'https://api.myquran.com/v2';
 
-    async init() {
-        await this.loadQuranData();
-        this.setupEventListeners();
-        this.displaySurahList();
-    }
+// Global Variables
+let allSurahs = [];
+let bookmarks = JSON.parse(localStorage.getItem('quranBookmarks')) || [];
+let currentSurah = null;
+let currentAudio = null;
 
-    async loadQuranData() {
-        try {
-            document.getElementById('surahGrid').innerHTML = `
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p>Memuat data Al-Quran...</p>
-                </div>
-            `;
+// Initialize App
+document.addEventListener('DOMContentLoaded', () => {
+    loadSurahList();
+    setupEventListeners();
+    updateBookmarkView();
+});
 
-            // Coba beberapa kemungkinan URL untuk mendapatkan data yang benar
-            const urls = [
-                'https://raw.githubusercontent.com/urangbandung/quran/main/data/quran.json',
-                'https://raw.githubusercontent.com/urangbandung/quran/master/data/quran.json',
-                'https://api.github.com/repos/urangbandung/quran/contents/data/quran.json'
-            ];
-
-            let rawData = null;
-            let success = false;
-
-            for (let url of urls) {
-                try {
-                    console.log('Trying URL:', url);
-                    const response = await fetch(url);
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    
-                    rawData = await response.json();
-                    console.log('Data fetched from:', url);
-                    console.log('Raw data:', rawData);
-                    success = true;
-                    break;
-                } catch (error) {
-                    console.log('Failed to fetch from:', url, error.message);
-                    continue;
-                }
-            }
-
-            if (!success) {
-                throw new Error('Failed to fetch data from all URLs');
-            }
-
-            // Jika data berasal dari GitHub API, kita perlu decode base64
-            if (rawData.content && rawData.encoding === 'base64') {
-                const decodedContent = atob(rawData.content);
-                rawData = JSON.parse(decodedContent);
-                console.log('Decoded data:', rawData);
-            }
-
-            this.surahs = this.processQuranData(rawData);
-            this.filteredSurahs = [...this.surahs];
-            
-            console.log('Processed surahs:', this.surahs);
-            
-        } catch (error) {
-            console.error('Error loading Quran data:', error);
-            this.loadDummyData();
-        }
-    }
-
-    processQuranData(rawData) {
-        try {
-            console.log('Processing raw data:', rawData);
-            
-            let surahsData = [];
-            
-            // Coba berbagai kemungkinan struktur data
-            if (Array.isArray(rawData)) {
-                surahsData = rawData;
-            } else if (rawData.surahs) {
-                surahsData = rawData.surahs;
-            } else if (rawData.data) {
-                surahsData = rawData.data;
-            } else if (rawData.chapters) {
-                surahsData = rawData.chapters;
-            } else {
-                // Jika rawData adalah objek tunggal dengan struktur surah
-                surahsData = Object.values(rawData).filter(item => 
-                    item && (item.number || item.nomor || item.id)
-                );
-            }
-
-            console.log('Surahs data found:', surahsData.length, 'surahs');
-
-            return surahsData.map((surah, index) => {
-                // Debug setiap surah
-                console.log(`Processing surah ${index}:`, surah);
-                
-                // Normalisasi properti surah
-                const number = this.getSurahProperty(surah, ['number', 'nomor', 'id', 'chapter_id']) || (index + 1);
-                const name = this.getSurahProperty(surah, ['name', 'englishName', 'title', 'nama']) || `Surah ${number}`;
-                const name_arabic = this.getSurahProperty(surah, ['name_arabic', 'arabic_name', 'arabic', 'nama_arab']) || 'القرآن';
-                
-                // Coba dapatkan terjemahan
-                let translation_id = this.getSurahProperty(surah, ['translation', 'arti', 'translation_id', 'name_translations.id']) || 'Terjemahan tidak tersedia';
-
-                // Tentukan tipe surah
-                let type_id = 'Makkiyah';
-                const type = this.getSurahProperty(surah, ['type', 'revelationType', 'revelation_place']);
-                if (type) {
-                    if (typeof type === 'string') {
-                        type_id = type.toLowerCase().includes('madani') || type.toLowerCase().includes('madinah') ? 'Madaniyah' : 'Makkiyah';
-                    } else if (type.id) {
-                        type_id = type.id.toLowerCase().includes('madani') ? 'Madaniyah' : 'Makkiyah';
-                    }
-                }
-
-                // Jumlah ayat
-                let ayah_count = this.getSurahProperty(surah, ['number_of_ayah', 'numberOfAyahs', 'verses_count', 'ayahs_count']) || 0;
-                if (!ayah_count && surah.verses) {
-                    ayah_count = surah.verses.length;
-                } else if (!ayah_count && surah.ayahs) {
-                    ayah_count = surah.ayahs.length;
-                }
-
-                // Proses ayat-ayat
-                let verses = [];
-                const ayahs = surah.verses || surah.ayahs || surah.ayat || [];
-                if (Array.isArray(ayahs)) {
-                    verses = ayahs.map((ayah, ayahIndex) => ({
-                        number: this.getAyahProperty(ayah, ['number', 'ayah_number', 'verse_number']) || (ayahIndex + 1),
-                        text: this.getAyahProperty(ayah, ['text', 'arabic_text', 'arabic']) || '',
-                        translation_id: this.getAyahProperty(ayah, ['translation', 'translation_id', 'indo', 'text_id']) || ''
-                    }));
-                }
-
-                return {
-                    number: parseInt(number),
-                    name: name,
-                    name_arabic: name_arabic,
-                    name_translations: {
-                        id: translation_id,
-                        en: name
-                    },
-                    number_of_ayah: parseInt(ayah_count) || 0,
-                    type: {
-                        id: type_id,
-                        en: type_id === 'Madaniyah' ? 'Medinan' : 'Meccan'
-                    },
-                    verses: verses
-                };
-            }).filter(surah => surah.number > 0); // Filter surah yang valid
-        } catch (error) {
-            console.error('Error processing data:', error);
-            return this.getDummySurahs();
-        }
-    }
-
-    getSurahProperty(obj, properties) {
-        for (let prop of properties) {
-            if (obj[prop] !== undefined) return obj[prop];
-            // Coba nested properties
-            if (prop.includes('.')) {
-                const parts = prop.split('.');
-                let current = obj;
-                for (let part of parts) {
-                    if (current && current[part] !== undefined) {
-                        current = current[part];
-                    } else {
-                        current = undefined;
-                        break;
-                    }
-                }
-                if (current !== undefined) return current;
-            }
-        }
-        return undefined;
-    }
-
-    getAyahProperty(obj, properties) {
-        return this.getSurahProperty(obj, properties);
-    }
-
-    loadDummyData() {
-        const dummySurahs = [
-            {
-                number: 1,
-                name: "Al-Fatihah",
-                name_arabic: "الفاتحة",
-                name_translations: { id: "Pembukaan", en: "The Opening" },
-                number_of_ayah: 7,
-                type: { id: "Makkiyah", en: "Meccan" },
-                verses: [
-                    {
-                        number: 1,
-                        text: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
-                        translation_id: "Dengan nama Allah Yang Maha Pengasih, Maha Penyayang."
-                    },
-                    {
-                        number: 2,
-                        text: "الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ",
-                        translation_id: "Segala puji bagi Allah, Tuhan seluruh alam,"
-                    },
-                    {
-                        number: 3,
-                        text: "الرَّحْمَٰنِ الرَّحِيمِ",
-                        translation_id: "Yang Maha Pengasih, Maha Penyayang,"
-                    },
-                    {
-                        number: 4,
-                        text: "مَالِكِ يَوْمِ الدِّينِ",
-                        translation_id: "Pemilik hari pembalasan."
-                    },
-                    {
-                        number: 5,
-                        text: "إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ",
-                        translation_id: "Hanya kepada Engkaulah kami menyembah dan hanya kepada Engkaulah kami mohon pertolongan."
-                    },
-                    {
-                        number: 6,
-                        text: "اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ",
-                        translation_id: "Tunjukilah kami jalan yang lurus,"
-                    },
-                    {
-                        number: 7,
-                        text: "صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ",
-                        translation_id: "(yaitu) jalan orang-orang yang telah Engkau beri nikmat; bukan (jalan) mereka yang dimurkai dan bukan pula (jalan) mereka yang sesat."
-                    }
-                ]
-            },
-            {
-                number: 2,
-                name: "Al-Baqarah",
-                name_arabic: "البقرة",
-                name_translations: { id: "Sapi Betina", en: "The Cow" },
-                number_of_ayah: 286,
-                type: { id: "Madaniyah", en: "Medinan" },
-                verses: []
-            },
-            {
-                number: 3,
-                name: "Ali 'Imran",
-                name_arabic: "آل عمران",
-                name_translations: { id: "Keluarga Imran", en: "Family of Imran" },
-                number_of_ayah: 200,
-                type: { id: "Madaniyah", en: "Medinan" },
-                verses: []
-            },
-            {
-                number: 114,
-                name: "An-Nas",
-                name_arabic: "الناس",
-                name_translations: { id: "Umat Manusia", en: "Mankind" },
-                number_of_ayah: 6,
-                type: { id: "Makkiyah", en: "Meccan" },
-                verses: []
-            }
-        ];
-
-        this.surahs = dummySurahs;
-        this.filteredSurahs = [...dummySurahs];
-        
-        document.getElementById('surahGrid').innerHTML = `
-            <div class="no-results">
-                <p>⚠️ Menampilkan data demo karena struktur data tidak sesuai</p>
-                <p>Silakan periksa console browser untuk detail error</p>
-            </div>
-        `;
-        
-        setTimeout(() => this.displaySurahList(), 2000);
-    }
-
-    setupEventListeners() {
-        const searchInput = document.getElementById('searchInput');
-        const searchBtn = document.getElementById('searchBtn');
-        
-        searchInput.addEventListener('input', (e) => {
-            this.searchSurahs(e.target.value);
+// Setup Event Listeners
+function setupEventListeners() {
+    // Navigation buttons
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            switchView(e.target.dataset.view);
         });
-        
-        searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                this.searchSurahs(searchInput.value);
-            }
-        });
-        
-        searchBtn.addEventListener('click', () => {
-            this.searchSurahs(searchInput.value);
-        });
-        
-        document.getElementById('backBtn').addEventListener('click', () => {
-            this.showSurahList();
-        });
-    }
+    });
 
-    searchSurahs(query) {
-        if (!query.trim()) {
-            this.filteredSurahs = [...this.surahs];
-        } else {
-            const searchTerm = query.toLowerCase();
-            this.filteredSurahs = this.surahs.filter(surah => 
-                surah.name.toLowerCase().includes(searchTerm) ||
-                (surah.name_translations && surah.name_translations.id.toLowerCase().includes(searchTerm)) ||
-                surah.name_arabic.includes(query) ||
-                surah.number.toString().includes(query)
-            );
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+        filterSurahs(e.target.value);
+    });
+
+    // Qari selection
+    document.getElementById('qariSelect').addEventListener('change', (e) => {
+        if (currentSurah) {
+            updateAudioSource(currentSurah, e.target.value);
         }
-        this.displaySurahList();
-    }
+    });
+}
 
-    displaySurahList() {
-        const surahGrid = document.getElementById('surahGrid');
-        
-        if (this.filteredSurahs.length === 0) {
-            surahGrid.innerHTML = `
-                <div class="no-results">
-                    <p>🔍 Tidak ditemukan surah yang cocok</p>
-                </div>
-            `;
-            return;
-        }
+// Switch between views (Surah, Juz, Bookmark)
+function switchView(view) {
+    // Update active nav button
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`[data-view="${view}"]`).classList.add('active');
 
-        surahGrid.innerHTML = this.filteredSurahs.map(surah => `
-            <div class="surah-card" onclick="quranApp.showSurahDetail(${surah.number})">
-                <div class="surah-number">${surah.number}</div>
-                <div class="surah-name-ar">${surah.name_arabic}</div>
-                <div class="surah-name-id">${surah.name_translations.id}</div>
-                <div class="surah-info">
-                    <span>${surah.number_of_ayah} Ayat</span>
-                    <span>${surah.type.id}</span>
-                </div>
-            </div>
-        `).join('');
-    }
+    // Update active view content
+    document.querySelectorAll('.view-content').forEach(content => {
+        content.classList.remove('active');
+    });
 
-    async showSurahDetail(surahNumber) {
-        this.currentSurah = this.surahs.find(s => s.number === surahNumber);
-        
-        if (!this.currentSurah) {
-            this.loadDummyData();
-            this.currentSurah = this.surahs.find(s => s.number === surahNumber);
-        }
-
-        document.getElementById('surahList').style.display = 'none';
-        document.getElementById('surahDetail').style.display = 'block';
-
-        document.getElementById('surahTitle').innerHTML = `
-            ${this.currentSurah.name_arabic}<br>
-            <span style="font-size: 1.2rem; font-family: 'Roboto', sans-serif; color: #666;">
-                ${this.currentSurah.name_translations.id}
-            </span>
-        `;
-        
-        document.getElementById('surahInfo').innerHTML = `
-            <div class="surah-info-detail">
-                <p>${this.currentSurah.number_of_ayah} Ayat • ${this.currentSurah.type.id}</p>
-                <p style="margin-top: 10px; font-style: italic;">"${this.currentSurah.name_translations.en}"</p>
-            </div>
-        `;
-
-        // Jika belum ada ayat, coba load dari API terpisah
-        if (!this.currentSurah.verses || this.currentSurah.verses.length === 0) {
-            await this.loadSurahVerses(surahNumber);
-        }
-
-        this.displayVerses();
-    }
-
-    async loadSurahVerses(surahNumber) {
-        try {
-            // Coba load ayat dari endpoint terpisah jika tersedia
-            const verseUrls = [
-                `https://raw.githubusercontent.com/urangbandung/quran/main/data/surah/${surahNumber}.json`,
-                `https://api.alquran.cloud/v1/surah/${surahNumber}/editions/quran-uthmani,id.indonesian`
-            ];
-
-            for (let url of verseUrls) {
-                try {
-                    const response = await fetch(url);
-                    if (response.ok) {
-                        const verseData = await response.json();
-                        
-                        if (verseData.data && verseData.data.ayahs) {
-                            // Format dari API alquran.cloud
-                            this.currentSurah.verses = verseData.data.ayahs.map(ayah => ({
-                                number: ayah.numberInSurah,
-                                text: ayah.text,
-                                translation_id: ayah.translation ? ayah.translation.text : ''
-                            }));
-                        } else if (Array.isArray(verseData)) {
-                            // Format dari file JSON lokal
-                            this.currentSurah.verses = verseData;
-                        }
-                        break;
-                    }
-                } catch (error) {
-                    console.log('Failed to load verses from:', url);
-                }
-            }
-        } catch (error) {
-            console.error('Error loading verses:', error);
-        }
-    }
-
-    displayVerses() {
-        const versesContainer = document.getElementById('versesContainer');
-        
-        if (!this.currentSurah.verses || this.currentSurah.verses.length === 0) {
-            if (this.currentSurah.number === 1) {
-                // Tampilkan Al-Fatihah dari dummy data
-                const dummySurah = this.getDummySurahForDetail(this.currentSurah.number);
-                if (dummySurah) {
-                    versesContainer.innerHTML = dummySurah.verses.map(verse => `
-                        <div class="verse">
-                            <div class="verse-header">
-                                <div class="verse-number">${verse.number}</div>
-                            </div>
-                            <div class="verse-text-ar">${verse.text}</div>
-                            <div class="verse-text-id">${verse.translation_id}</div>
-                        </div>
-                    `).join('');
-                    return;
-                }
-            }
-            
-            versesContainer.innerHTML = `
-                <div class="no-results">
-                    <p>📝 Detail ayat belum tersedia untuk surah ini</p>
-                </div>
-            `;
-            return;
-        }
-
-        versesContainer.innerHTML = this.currentSurah.verses.map(verse => `
-            <div class="verse">
-                <div class="verse-header">
-                    <div class="verse-number">${verse.number}</div>
-                </div>
-                <div class="verse-text-ar">${verse.text}</div>
-                <div class="verse-text-id">${verse.translation_id || 'Terjemahan tidak tersedia'}</div>
-            </div>
-        `).join('');
-    }
-
-    getDummySurahForDetail(surahNumber) {
-        const dummySurahs = [
-            {
-                number: 1,
-                verses: [
-                    {
-                        number: 1,
-                        text: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
-                        translation_id: "Dengan nama Allah Yang Maha Pengasih, Maha Penyayang."
-                    },
-                    {
-                        number: 2,
-                        text: "الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ",
-                        translation_id: "Segala puji bagi Allah, Tuhan seluruh alam,"
-                    },
-                    {
-                        number: 3,
-                        text: "الرَّحْمَٰنِ الرَّحِيمِ",
-                        translation_id: "Yang Maha Pengasih, Maha Penyayang,"
-                    },
-                    {
-                        number: 4,
-                        text: "مَالِكِ يَوْمِ الدِّينِ",
-                        translation_id: "Pemilik hari pembalasan."
-                    },
-                    {
-                        number: 5,
-                        text: "إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ",
-                        translation_id: "Hanya kepada Engkaulah kami menyembah dan hanya kepada Engkaulah kami mohon pertolongan."
-                    },
-                    {
-                        number: 6,
-                        text: "اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ",
-                        translation_id: "Tunjukilah kami jalan yang lurus,"
-                    },
-                    {
-                        number: 7,
-                        text: "صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ",
-                        translation_id: "(yaitu) jalan orang-orang yang telah Engkau beri nikmat; bukan (jalan) mereka yang dimurkai dan bukan pula (jalan) mereka yang sesat."
-                    }
-                ]
-            }
-        ];
-        
-        return dummySurahs.find(s => s.number === surahNumber);
-    }
-
-    showSurahList() {
-        document.getElementById('surahDetail').style.display = 'none';
-        document.getElementById('surahList').style.display = 'block';
-        document.getElementById('searchInput').value = '';
-        this.filteredSurahs = [...this.surahs];
-        this.displaySurahList();
-    }
-
-    getDummySurahs() {
-        return [
-            {
-                number: 1,
-                name: "Al-Fatihah",
-                name_arabic: "الفاتحة",
-                name_translations: { id: "Pembukaan", en: "The Opening" },
-                number_of_ayah: 7,
-                type: { id: "Makkiyah", en: "Meccan" },
-                verses: []
-            },
-            {
-                number: 2,
-                name: "Al-Baqarah",
-                name_arabic: "البقرة",
-                name_translations: { id: "Sapi Betina", en: "The Cow" },
-                number_of_ayah: 286,
-                type: { id: "Madaniyah", en: "Medinan" },
-                verses: []
-            },
-            {
-                number: 3,
-                name: "Ali 'Imran",
-                name_arabic: "آل عمران",
-                name_translations: { id: "Keluarga Imran", en: "Family of Imran" },
-                number_of_ayah: 200,
-                type: { id: "Madaniyah", en: "Medinan" },
-                verses: []
-            }
-        ];
+    switch(view) {
+        case 'surah':
+            document.getElementById('surahList').classList.add('active');
+            document.getElementById('searchInput').style.display = 'block';
+            break;
+        case 'juz':
+            document.getElementById('juzList').classList.add('active');
+            document.getElementById('searchInput').style.display = 'none';
+            loadJuzList();
+            break;
+        case 'bookmark':
+            document.getElementById('bookmarkList').classList.add('active');
+            document.getElementById('searchInput').style.display = 'none';
+            updateBookmarkView();
+            break;
     }
 }
 
-// Initialize the app
-let quranApp;
+// Load Surah List
+async function loadSurahList() {
+    showLoading(true);
+    try {
+        const response = await fetch(`${API_BASE}/surat/semua`);
+        const data = await response.json();
+        
+        if (data.code === 200) {
+            allSurahs = data.data;
+            displaySurahs(allSurahs);
+        }
+    } catch (error) {
+        console.error('Error loading surahs:', error);
+        showError('Gagal memuat daftar surah. Silakan coba lagi.');
+    } finally {
+        showLoading(false);
+    }
+}
 
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('Initializing Quran App...');
-    quranApp = new QuranApp();
-});
+// Display Surahs
+function displaySurahs(surahs) {
+    const surahList = document.getElementById('surahList');
+    surahList.innerHTML = '';
+
+    surahs.forEach(surah => {
+        const surahCard = document.createElement('div');
+        surahCard.className = 'surah-card';
+        surahCard.onclick = () => loadSurahDetail(surah.nomor);
+        
+        surahCard.innerHTML = `
+            <div class="surah-number">${surah.nomor}</div>
+            <div class="surah-name">
+                <div>
+                    <h3>${surah.namaLatin}</h3>
+                    <div class="surah-meta">
+                        ${surah.tempatTurun} • ${surah.jumlahAyat} Ayat
+                    </div>
+                </div>
+                <div class="surah-name-arabic">${surah.nama}</div>
+            </div>
+            <div class="surah-meta">${surah.arti}</div>
+        `;
+        
+        surahList.appendChild(surahCard);
+    });
+}
+
+// Filter Surahs (Search)
+function filterSurahs(query) {
+    const filtered = allSurahs.filter(surah => 
+        surah.namaLatin.toLowerCase().includes(query.toLowerCase()) ||
+        surah.arti.toLowerCase().includes(query.toLowerCase()) ||
+        surah.nomor.toString().includes(query)
+    );
+    displaySurahs(filtered);
+}
+
+// Load Juz List
+function loadJuzList() {
+    const juzList = document.getElementById('juzList');
+    juzList.innerHTML = '';
+
+    for (let i = 1; i <= 30; i++) {
+        const juzCard = document.createElement('div');
+        juzCard.className = 'juz-card';
+        juzCard.onclick = () => loadJuzDetail(i);
+        
+        juzCard.innerHTML = `
+            <h3>Juz ${i}</h3>
+        `;
+        
+        juzList.appendChild(juzCard);
+    }
+}
+
+// Load Surah Detail
+async function loadSurahDetail(surahNumber) {
+    showLoading(true);
+    currentSurah = surahNumber;
+    
+    try {
+        const response = await fetch(`${API_BASE}/surat/${surahNumber}`);
+        const data = await response.json();
+        
+        if (data.code === 200) {
+            displaySurahDetail(data.data);
+            
+            // Hide surah list and show detail
+            document.getElementById('surahList').style.display = 'none';
+            document.getElementById('surahDetail').style.display = 'block';
+            
+            // Update audio source
+            const qariValue = document.getElementById('qariSelect').value;
+            updateAudioSource(surahNumber, qariValue);
+        }
+    } catch (error) {
+        console.error('Error loading surah detail:', error);
+        showError('Gagal memuat detail surah. Silakan coba lagi.');
+    } finally {
+        showLoading(false);
+    }
+}
+
+// Display Surah Detail
+function displaySurahDetail(surah) {
+    document.getElementById('surahTitle').textContent = `${surah.namaLatin} (${surah.nama})`;
+    document.getElementById('surahInfo').textContent = 
+        `${surah.tempatTurun} • ${surah.jumlahAyat} Ayat • ${surah.arti}`;
+    
+    const ayatList = document.getElementById('ayatList');
+    ayatList.innerHTML = '';
+    
+    // Add Bismillah if not Al-Fatihah or At-Taubah
+    if (surah.nomor !== 1 && surah.nomor !== 9) {
+        const bismillah = document.createElement('div');
+        bismillah.className = 'ayat-item';
+        bismillah.innerHTML = `
+            <div class="ayat-arabic">بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ</div>
+            <div class="ayat-translation">Dengan nama Allah Yang Maha Pengasih, Maha Penyayang.</div>
+        `;
+        ayatList.appendChild(bismillah);
+    }
+    
+    // Display each ayat
+    surah.ayat.forEach(ayat => {
+        const ayatItem = document.createElement('div');
+        ayatItem.className = 'ayat-item';
+        ayatItem.id = `ayat-${ayat.nomorAyat}`;
+        
+        ayatItem.innerHTML = `
+            <div class="ayat-number">${ayat.nomorAyat}</div>
+            <div class="ayat-arabic">${ayat.teksArab}</div>
+            <div class="ayat-translation">${ayat.teksIndonesia}</div>
+            <div class="ayat-actions">
+                <button class="ayat-btn" onclick="playAyatAudio(${surah.nomor}, ${ayat.nomorAyat})">
+                    🔊 Play
+                </button>
+                <button class="ayat-btn" onclick="showTafsir(${surah.nomor}, ${ayat.nomorAyat})">
+                    📖 Tafsir
+                </button>
+                <button class="ayat-btn" onclick="toggleBookmark(${surah.nomor}, ${ayat.nomorAyat}, '${surah.namaLatin}')">
+                    ${isBookmarked(surah.nomor, ayat.nomorAyat) ? '❤️' : '🤍'} Bookmark
+                </button>
+                <button class="ayat-btn" onclick="copyAyat('${ayat.teksArab}', '${ayat.teksIndonesia}')">
+                    📋 Salin
+                </button>
+            </div>
+        `;
+        
+        ayatList.appendChild(ayatItem);
+    });
+}
+
+// Update Audio Source
+function updateAudioSource(surahNumber, qariCode) {
+    const audioPlayer = document.getElementById('audioPlayer');
+    const paddedSurah = String(surahNumber).padStart(3, '0');
+    audioPlayer.src = `https://media.e-quran.id/audio-full/${qariCode}/${paddedSurah}.mp3`;
+}
+
+// Play Ayat Audio
+async function playAyatAudio(surahNumber, ayatNumber) {
+    try {
+        const paddedSurah = String(surahNumber).padStart(3, '0');
+        const paddedAyat = String(ayatNumber).padStart(3, '0');
+        const qariCode = document.getElementById('qariSelect').value;
+        
+        const audioUrl = `https://media.e-quran.id/audio/${qariCode}/${paddedSurah}${paddedAyat}.mp3`;
+        
+        if (currentAudio) {
+            currentAudio.pause();
+        }
+        
+        currentAudio = new Audio(audioUrl);
+        currentAudio.play();
+    } catch (error) {
+        console.error('Error playing audio:', error);
+        alert('Gagal memutar audio');
+    }
+}
+
+// Show Tafsir
+async function showTafsir(surahNumber, ayatNumber) {
+    showLoading(true);
+    try {
+        const response = await fetch(`${API_BASE}/tafsir/${surahNumber}/${ayatNumber}`);
+        const data = await response.json();
+        
+        if (data.code === 200) {
+            const modal = document.getElementById('tafsirModal');
+            const content = document.getElementById('tafsirContent');
+            
+            content.innerHTML = `
+                <h4>Surah ${data.data.surah.namaLatin} Ayat ${ayatNumber}</h4>
+                <p class="ayat-arabic" style="font-size: 1.3rem; margin: 20px 0;">${data.data.ayat.teksArab}</p>
+                <p style="margin-bottom: 20px;"><strong>Terjemahan:</strong> ${data.data.ayat.teksIndonesia}</p>
+                <p><strong>Tafsir:</strong></p>
+                <p style="line-height: 1.8;">${data.data.tafsir.teksTafsir}</p>
+            `;
+            
+            modal.classList.add('show');
+        }
+    } catch (error) {
+        console.error('Error loading tafsir:', error);
+        alert('Gagal memuat tafsir');
+    } finally {
+        showLoading(false);
+    }
+}
+
+// Close Tafsir Modal
+function closeTafsir() {
+    document.getElementById('tafsirModal').classList.remove('show');
+}
+
+// Copy Ayat
+function copyAyat(arabicText, translationText) {
+    const textToCopy = `${arabicText}\n\n${translationText}`;
+    
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            showNotification('Ayat berhasil disalin!');
+        }).catch(err => {
+            console.error('Failed to copy:', err);
+        });
+    } else {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = textToCopy;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showNotification('Ayat berhasil disalin!');
+    }
+}
+
+// Bookmark Functions
+function toggleBookmark(surahNumber, ayatNumber, surahName) {
+    const bookmarkId = `${surahNumber}-${ayatNumber}`;
+    const existingIndex = bookmarks.findIndex(b => b.id === bookmarkId);
+    
+    if (existingIndex !== -1) {
+        bookmarks.splice(existingIndex, 1);
+        showNotification('Bookmark dihapus');
+    } else {
+        bookmarks.push({
+            id: bookmarkId,
+            surahNumber,
+            ayatNumber,
+            surahName,
+            timestamp: new Date().getTime()
+        });
+        showNotification('Bookmark ditambahkan');
+    }
+    
+    localStorage.setItem('quranBookmarks', JSON.stringify(bookmarks));
+    
+    // Update button if in detail view
+    if (document.getElementById('surahDetail').style.display === 'block') {
+        loadSurahDetail(currentSurah);
+    }
+    
+    updateBookmarkView();
+}
+
+function isBookmarked(surahNumber, ayatNumber) {
+    const bookmarkId = `${surahNumber}-${ayatNumber}`;
+    return bookmarks.some(b => b.id === bookmarkId);
+}
+
+function updateBookmarkView() {
+    const bookmarkList = document.getElementById('bookmarkList');
+    
+    if (bookmarks.length === 0) {
+        bookmarkList.innerHTML = `
+            <div class="empty-state">
+                <p>📑 Belum ada bookmark</p>
+            </div>
+        `;
+        return;
+    }
+    
+    bookmarkList.innerHTML = '<div class="surah-list" id="bookmarkCards"></div>';
+    const bookmarkCards = document.getElementById('bookmarkCards');
+    
+    bookmarks.reverse().forEach(bookmark => {
+        const card = document.createElement('div');
+        card.className = 'surah-card';
+        card.onclick = () => {
+            loadSurahDetail(bookmark.surahNumber);
+            setTimeout(() => {
+                document.getElementById(`ayat-${bookmark.ayatNumber}`).scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }, 500);
+        };
+        
+        card.innerHTML = `
+            <h3>${bookmark.surahName}</h3>
+            <p>Ayat ${bookmark.ayatNumber}</p>
+            <p class="surah-meta">${new Date(bookmark.timestamp).toLocaleDateString('id-ID')}</p>
+        `;
+        
+        bookmarkCards.appendChild(card);
+    });
+}
+
+// Back to List
+function backToList() {
+    document.getElementById('surahDetail').style.display = 'none';
+    document.getElementById('surahList').style.display = 'grid';
+    
+    // Stop audio if playing
+    const audioPlayer = document.getElementById('audioPlayer');
+    audioPlayer.pause();
+    
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio = null;
+    }
+}
+
+// Show Loading
+function showLoading(show) {
+    const loading = document.getElementById('loading');
+    if (show) {
+        loading.classList.add('active');
+    } else {
+        loading.classList.remove('active');
+    }
+}
+
+// Show Error
+function showError(message) {
+    alert(message);
+}
+
+// Show Notification
+function showNotification(message) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: var(--primary-color);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        z-index: 2000;
+        animation: slideUp 0.3s;
+    `;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// Handle Juz Detail (simplified version)
+async function loadJuzDetail(juzNumber) {
+    alert(`Fitur Juz ${juzNumber} dalam pengembangan`);
+    // You can implement full juz functionality here
+    // The API might have endpoints for juz that you can utilize
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('tafsirModal');
+    if (event.target === modal) {
+        modal.classList.remove('show');
+    }
+}
