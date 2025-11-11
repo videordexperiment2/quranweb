@@ -21,19 +21,51 @@ class QuranApp {
                 </div>
             `;
 
-            const response = await fetch('https://raw.githubusercontent.com/urangbandung/quran/main/data/quran.json');
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            // Coba beberapa kemungkinan URL untuk mendapatkan data yang benar
+            const urls = [
+                'https://raw.githubusercontent.com/urangbandung/quran/main/data/quran.json',
+                'https://raw.githubusercontent.com/urangbandung/quran/master/data/quran.json',
+                'https://api.github.com/repos/urangbandung/quran/contents/data/quran.json'
+            ];
+
+            let rawData = null;
+            let success = false;
+
+            for (let url of urls) {
+                try {
+                    console.log('Trying URL:', url);
+                    const response = await fetch(url);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    rawData = await response.json();
+                    console.log('Data fetched from:', url);
+                    console.log('Raw data:', rawData);
+                    success = true;
+                    break;
+                } catch (error) {
+                    console.log('Failed to fetch from:', url, error.message);
+                    continue;
+                }
             }
-            
-            const rawData = await response.json();
-            console.log('Raw data structure:', rawData); // Debug
-            
+
+            if (!success) {
+                throw new Error('Failed to fetch data from all URLs');
+            }
+
+            // Jika data berasal dari GitHub API, kita perlu decode base64
+            if (rawData.content && rawData.encoding === 'base64') {
+                const decodedContent = atob(rawData.content);
+                rawData = JSON.parse(decodedContent);
+                console.log('Decoded data:', rawData);
+            }
+
             this.surahs = this.processQuranData(rawData);
             this.filteredSurahs = [...this.surahs];
             
-            console.log('Processed surahs:', this.surahs); // Debug
+            console.log('Processed surahs:', this.surahs);
             
         } catch (error) {
             console.error('Error loading Quran data:', error);
@@ -43,70 +75,68 @@ class QuranApp {
 
     processQuranData(rawData) {
         try {
-            // Coba berbagai kemungkinan struktur data
+            console.log('Processing raw data:', rawData);
+            
             let surahsData = [];
             
-            // Jika rawData adalah array langsung
+            // Coba berbagai kemungkinan struktur data
             if (Array.isArray(rawData)) {
                 surahsData = rawData;
-            }
-            // Jika rawData memiliki properti tertentu
-            else if (rawData.surahs) {
+            } else if (rawData.surahs) {
                 surahsData = rawData.surahs;
-            }
-            else if (rawData.data) {
+            } else if (rawData.data) {
                 surahsData = rawData.data;
-            }
-            else {
-                // Coba asumsi rawData itu sendiri adalah objek surah
-                surahsData = [rawData];
+            } else if (rawData.chapters) {
+                surahsData = rawData.chapters;
+            } else {
+                // Jika rawData adalah objek tunggal dengan struktur surah
+                surahsData = Object.values(rawData).filter(item => 
+                    item && (item.number || item.nomor || item.id)
+                );
             }
 
-            console.log('Surahs data:', surahsData); // Debug
+            console.log('Surahs data found:', surahsData.length, 'surahs');
 
             return surahsData.map((surah, index) => {
                 // Debug setiap surah
                 console.log(`Processing surah ${index}:`, surah);
                 
-                // Coba berbagai kemungkinan properti
-                const number = surah.number || surah.nomor || surah.id || (index + 1);
-                const name = surah.name || surah.nama || surah.englishName || surah.title || `Surah ${number}`;
-                const name_arabic = surah.name_arabic || surah.arabic_name || surah.nama_arab || 'القرآن';
-                const ayah_count = surah.ayah_count || surah.number_of_ayah || surah.ayahs?.length || surah.verses?.length || 0;
+                // Normalisasi properti surah
+                const number = this.getSurahProperty(surah, ['number', 'nomor', 'id', 'chapter_id']) || (index + 1);
+                const name = this.getSurahProperty(surah, ['name', 'englishName', 'title', 'nama']) || `Surah ${number}`;
+                const name_arabic = this.getSurahProperty(surah, ['name_arabic', 'arabic_name', 'arabic', 'nama_arab']) || 'القرآن';
                 
                 // Coba dapatkan terjemahan
-                let translation_id = 'Terjemahan tidak tersedia';
-                if (surah.translation) {
-                    translation_id = surah.translation;
-                } else if (surah.arti) {
-                    translation_id = surah.arti;
-                } else if (surah.name_translations?.id) {
-                    translation_id = surah.name_translations.id;
-                } else if (typeof surah.translation === 'string') {
-                    translation_id = surah.translation;
-                }
+                let translation_id = this.getSurahProperty(surah, ['translation', 'arti', 'translation_id', 'name_translations.id']) || 'Terjemahan tidak tersedia';
 
                 // Tentukan tipe surah
                 let type_id = 'Makkiyah';
-                if (surah.type) {
-                    if (typeof surah.type === 'string') {
-                        type_id = surah.type.includes('madani') || surah.type.includes('madinah') ? 'Madaniyah' : 'Makkiyah';
-                    } else if (surah.type.id) {
-                        type_id = surah.type.id.includes('madani') ? 'Madaniyah' : 'Makkiyah';
+                const type = this.getSurahProperty(surah, ['type', 'revelationType', 'revelation_place']);
+                if (type) {
+                    if (typeof type === 'string') {
+                        type_id = type.toLowerCase().includes('madani') || type.toLowerCase().includes('madinah') ? 'Madaniyah' : 'Makkiyah';
+                    } else if (type.id) {
+                        type_id = type.id.toLowerCase().includes('madani') ? 'Madaniyah' : 'Makkiyah';
                     }
+                }
+
+                // Jumlah ayat
+                let ayah_count = this.getSurahProperty(surah, ['number_of_ayah', 'numberOfAyahs', 'verses_count', 'ayahs_count']) || 0;
+                if (!ayah_count && surah.verses) {
+                    ayah_count = surah.verses.length;
+                } else if (!ayah_count && surah.ayahs) {
+                    ayah_count = surah.ayahs.length;
                 }
 
                 // Proses ayat-ayat
                 let verses = [];
-                if (surah.verses || surah.ayahs) {
-                    const ayahs = surah.verses || surah.ayahs;
-                    if (Array.isArray(ayahs)) {
-                        verses = ayahs.map((ayah, ayahIndex) => ({
-                            number: ayah.number || ayah.ayah_number || (ayahIndex + 1),
-                            text: ayah.text || ayah.arabic_text || ayah.ayah || '',
-                            translation_id: ayah.translation || ayah.translation_id || ayah.indo || ''
-                        }));
-                    }
+                const ayahs = surah.verses || surah.ayahs || surah.ayat || [];
+                if (Array.isArray(ayahs)) {
+                    verses = ayahs.map((ayah, ayahIndex) => ({
+                        number: this.getAyahProperty(ayah, ['number', 'ayah_number', 'verse_number']) || (ayahIndex + 1),
+                        text: this.getAyahProperty(ayah, ['text', 'arabic_text', 'arabic']) || '',
+                        translation_id: this.getAyahProperty(ayah, ['translation', 'translation_id', 'indo', 'text_id']) || ''
+                    }));
                 }
 
                 return {
@@ -117,18 +147,43 @@ class QuranApp {
                         id: translation_id,
                         en: name
                     },
-                    number_of_ayah: parseInt(ayah_count),
+                    number_of_ayah: parseInt(ayah_count) || 0,
                     type: {
                         id: type_id,
                         en: type_id === 'Madaniyah' ? 'Medinan' : 'Meccan'
                     },
                     verses: verses
                 };
-            });
+            }).filter(surah => surah.number > 0); // Filter surah yang valid
         } catch (error) {
             console.error('Error processing data:', error);
             return this.getDummySurahs();
         }
+    }
+
+    getSurahProperty(obj, properties) {
+        for (let prop of properties) {
+            if (obj[prop] !== undefined) return obj[prop];
+            // Coba nested properties
+            if (prop.includes('.')) {
+                const parts = prop.split('.');
+                let current = obj;
+                for (let part of parts) {
+                    if (current && current[part] !== undefined) {
+                        current = current[part];
+                    } else {
+                        current = undefined;
+                        break;
+                    }
+                }
+                if (current !== undefined) return current;
+            }
+        }
+        return undefined;
+    }
+
+    getAyahProperty(obj, properties) {
+        return this.getSurahProperty(obj, properties);
     }
 
     loadDummyData() {
@@ -195,6 +250,15 @@ class QuranApp {
                 number_of_ayah: 200,
                 type: { id: "Madaniyah", en: "Medinan" },
                 verses: []
+            },
+            {
+                number: 114,
+                name: "An-Nas",
+                name_arabic: "الناس",
+                name_translations: { id: "Umat Manusia", en: "Mankind" },
+                number_of_ayah: 6,
+                type: { id: "Makkiyah", en: "Meccan" },
+                verses: []
             }
         ];
 
@@ -241,7 +305,7 @@ class QuranApp {
             const searchTerm = query.toLowerCase();
             this.filteredSurahs = this.surahs.filter(surah => 
                 surah.name.toLowerCase().includes(searchTerm) ||
-                surah.name_translations.id.toLowerCase().includes(searchTerm) ||
+                (surah.name_translations && surah.name_translations.id.toLowerCase().includes(searchTerm)) ||
                 surah.name_arabic.includes(query) ||
                 surah.number.toString().includes(query)
             );
@@ -299,7 +363,48 @@ class QuranApp {
             </div>
         `;
 
+        // Jika belum ada ayat, coba load dari API terpisah
+        if (!this.currentSurah.verses || this.currentSurah.verses.length === 0) {
+            await this.loadSurahVerses(surahNumber);
+        }
+
         this.displayVerses();
+    }
+
+    async loadSurahVerses(surahNumber) {
+        try {
+            // Coba load ayat dari endpoint terpisah jika tersedia
+            const verseUrls = [
+                `https://raw.githubusercontent.com/urangbandung/quran/main/data/surah/${surahNumber}.json`,
+                `https://api.alquran.cloud/v1/surah/${surahNumber}/editions/quran-uthmani,id.indonesian`
+            ];
+
+            for (let url of verseUrls) {
+                try {
+                    const response = await fetch(url);
+                    if (response.ok) {
+                        const verseData = await response.json();
+                        
+                        if (verseData.data && verseData.data.ayahs) {
+                            // Format dari API alquran.cloud
+                            this.currentSurah.verses = verseData.data.ayahs.map(ayah => ({
+                                number: ayah.numberInSurah,
+                                text: ayah.text,
+                                translation_id: ayah.translation ? ayah.translation.text : ''
+                            }));
+                        } else if (Array.isArray(verseData)) {
+                            // Format dari file JSON lokal
+                            this.currentSurah.verses = verseData;
+                        }
+                        break;
+                    }
+                } catch (error) {
+                    console.log('Failed to load verses from:', url);
+                }
+            }
+        } catch (error) {
+            console.error('Error loading verses:', error);
+        }
     }
 
     displayVerses() {
@@ -337,7 +442,7 @@ class QuranApp {
                     <div class="verse-number">${verse.number}</div>
                 </div>
                 <div class="verse-text-ar">${verse.text}</div>
-                <div class="verse-text-id">${verse.translation_id}</div>
+                <div class="verse-text-id">${verse.translation_id || 'Terjemahan tidak tersedia'}</div>
             </div>
         `).join('');
     }
@@ -416,6 +521,15 @@ class QuranApp {
                 number_of_ayah: 286,
                 type: { id: "Madaniyah", en: "Medinan" },
                 verses: []
+            },
+            {
+                number: 3,
+                name: "Ali 'Imran",
+                name_arabic: "آل عمران",
+                name_translations: { id: "Keluarga Imran", en: "Family of Imran" },
+                number_of_ayah: 200,
+                type: { id: "Madaniyah", en: "Medinan" },
+                verses: []
             }
         ];
     }
@@ -426,6 +540,5 @@ let quranApp;
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Initializing Quran App...');
-    console.log('Fetching data from: https://raw.githubusercontent.com/urangbandung/quran/main/data/quran.json');
     quranApp = new QuranApp();
 });
