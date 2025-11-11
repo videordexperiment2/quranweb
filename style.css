@@ -1,884 +1,103 @@
-/* Root Variables */
-:root {
-    --primary: #4F46E5;
-    --primary-dark: #4338CA;
-    --secondary: #7C3AED;
-    --success: #10B981;
-    --danger: #EF4444;
-    --warning: #F59E0B;
-    --dark: #1F2937;
-    --light: #F9FAFB;
-    --text-primary: #111827;
-    --text-secondary: #6B7280;
-    --border: #E5E7EB;
-    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    --radius: 12px;
-    --arabic-font: 'Scheherazade New', serif;
-    --latin-font: 'Plus Jakarta Sans', sans-serif;
-}
-
-/* Dark Theme */
-[data-theme="dark"] {
-    --primary: #6366F1;
-    --primary-dark: #4F46E5;
-    --dark: #F9FAFB;
-    --light: #111827;
-    --text-primary: #F9FAFB;
-    --text-secondary: #D1D5DB;
-    --border: #374151;
-    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
-}
-
-/* Base Styles */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
+/* Menggunakan font dari Google Fonts */
 body {
-    font-family: var(--latin-font);
-    background: var(--light);
-    color: var(--text-primary);
-    line-height: 1.6;
-    min-height: 100vh;
-    transition: all 0.3s ease;
-}
-
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
-}
-
-/* Loading Screen */
-.loading-screen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    transition: opacity 0.3s;
-}
-
-.loading-screen.hide {
-    opacity: 0;
-    pointer-events: none;
-}
-
-.loading-content {
-    text-align: center;
-}
-
-.arabic-logo {
-    font-family: var(--arabic-font);
-    font-size: 3rem;
-    color: var(--primary);
-    margin-bottom: 20px;
-    animation: pulse 2s infinite;
-}
-
-.spinner {
-    width: 50px;
-    height: 50px;
-    margin: 20px auto;
-    border: 4px solid var(--border);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
-
-/* Header */
-.header {
-    background: white;
-    box-shadow: var(--shadow);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-}
-
-.header-wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 0;
-}
-
-.logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--primary);
-}
-
-.nav-menu {
-    display: flex;
-    gap: 5px;
-}
-
-.nav-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 20px;
-    background: transparent;
-    border: none;
-    color: var(--text-secondary);
-    font-size: 0.95rem;
-    font-weight: 500;
-    cursor: pointer;
-    border-radius: var(--radius);
-    transition: all 0.3s;
-}
-
-.nav-item:hover {
-    background: var(--light);
-    color: var(--primary);
-}
-
-.nav-item.active {
-    background: var(--primary);
-    color: white;
-}
-
-.menu-toggle {
-    display: none;
-    background: transparent;
-    border: none;
-    font-size: 1.5rem;
-    color: var(--text-primary);
-    cursor: pointer;
-}
-
-/* Pages */
-.page {
-    display: none;
-    padding: 2rem 0;
-    min-height: calc(100vh - 80px);
-    animation: fadeIn 0.3s;
-}
-
-.page.active {
-    display: block;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* Hero Section */
-.hero-section {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 3rem;
-    align-items: center;
-    padding: 3rem 0;
-}
-
-.hero-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 10px;
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.hero-subtitle {
-    font-size: 1.2rem;
-    color: var(--text-secondary);
-    margin-bottom: 2rem;
-}
-
-.last-read {
-    padding: 1.5rem;
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
-    color: white;
-    border-radius: var(--radius);
-    cursor: pointer;
-    transition: transform 0.3s;
-}
-
-.last-read:hover {
-    transform: translateY(-5px);
-}
-
-.hero-image svg {
-    width: 100%;
-    height: auto;
-    filter: drop-shadow(0 20px 40px rgba(79, 70, 229, 0.3));
-}
-
-/* Quick Access */
-.quick-access {
-    padding: 3rem 0;
-}
-
-.section-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-bottom: 1.5rem;
-    color: var(--text-primary);
-}
-
-.quick-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-}
-
-.quick-card {
-    background: white;
-    padding: 2rem;
-    border-radius: var(--radius);
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s;
-    box-shadow: var(--shadow);
-}
-
-.quick-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-lg);
-}
-
-.quick-card i {
-    font-size: 2rem;
-    color: var(--primary);
-    margin-bottom: 1rem;
-}
-
-.quick-card h3 {
-    font-size: 1.1rem;
-    margin-bottom: 0.5rem;
-}
-
-.quick-card p {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-}
-
-/* Search Section */
-.search-section {
-    margin-bottom: 2rem;
-}
-
-.search-box {
-    position: relative;
-    margin-bottom: 1rem;
-}
-
-.search-box i {
-    position: absolute;
-    left: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-secondary);
-}
-
-.search-box input {
-    width: 100%;
-    padding: 15px 20px 15px 50px;
-    font-size: 1rem;
-    border: 2px solid var(--border);
-    border-radius: var(--radius);
-    outline: none;
-    transition: border-color 0.3s;
-    background: white;
-}
-
-.search-box input:focus {
-    border-color: var(--primary);
-}
-
-.filter-buttons {
-    display: flex;
-    gap: 10px;
-}
-
-.filter-btn {
-    padding: 8px 20px;
-    background: white;
-    border: 2px solid var(--border);
-    border-radius: 25px;
-    cursor: pointer;
-    transition: all 0.3s;
-    font-weight: 500;
-}
-
-.filter-btn:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-}
-
-.filter-btn.active {
-    background: var(--primary);
-    color: white;
-    border-color: var(--primary);
-}
-
-/* Surat Grid */
-.surat-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
-}
-
-.surat-card {
-    background: white;
-    border-radius: var(--radius);
-    padding: 1.5rem;
-    cursor: pointer;
-    transition: all 0.3s;
-    box-shadow: var(--shadow);
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.surat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-lg);
-}
-
-.surat-number-box {
-    width: 50px;
-    height: 50px;
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 12px;
-    font-weight: 700;
-    flex-shrink: 0;
-}
-
-.surat-card-content {
-    flex: 1;
-}
-
-.surat-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: start;
-    margin-bottom: 8px;
-}
-
-.surat-latin {
-    font-weight: 600;
-    font-size: 1.1rem;
-    color: var(--text-primary);
-}
-
-.surat-arabic {
-    font-family: var(--arabic-font);
-    font-size: 1.5rem;
-    color: var(--primary);
-}
-
-.surat-meta {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-}
-
-/* Juz Grid */
-.juz-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 1.5rem;
-}
-
-.juz-card {
-    background: white;
-    padding: 2rem;
-    border-radius: var(--radius);
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s;
-    box-shadow: var(--shadow);
-}
-
-.juz-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-lg);
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
-    color: white;
-}
-
-.juz-number {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-}
-
-/* Surat Detail */
-.surat-detail-header {
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
-    color: white;
-    padding: 2rem 0;
-    position: sticky;
-    top: 0;
-    z-index: 50;
-}
-
-.surat-detail-header .container {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-}
-
-.back-button {
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
-    color: white;
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background 0.3s;
-}
-
-.back-button:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
-.surat-info {
-    flex: 1;
-    text-align: center;
-}
-
-.surat-info h1 {
-    font-size: 1.8rem;
-    margin-bottom: 5px;
-}
-
-.surat-info p {
-    opacity: 0.9;
-}
-
-.audio-toggle {
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
-    color: white;
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background 0.3s;
-}
-
-/* Audio Player */
-.audio-player {
-    background: white;
-    padding: 1rem;
-    box-shadow: var(--shadow);
-    position: sticky;
-    top: 120px;
-    z-index: 40;
-    display: none;
-}
-
-.audio-player.show {
-    display: block;
-}
-
-#suratAudio {
-    width: 100%;
-    margin-bottom: 1rem;
-}
-
-.audio-controls {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-}
-
-.audio-controls button {
-    background: var(--primary);
-    border: none;
-    color: white;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    cursor: pointer;
-    transition: background 0.3s;
-}
-
-.audio-controls button:hover {
-    background: var(--primary-dark);
-}
-
-/* Ayat Container */
-.ayat-container {
-    padding: 2rem 0;
-}
-
-.ayat-item {
-    background: white;
-    border-radius: var(--radius);
-    padding: 2rem;
-    margin-bottom: 1.5rem;
-    box-shadow: var(--shadow);
-}
-
-.ayat-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1.5rem;
-}
-
-.ayat-number-badge {
-    background: var(--primary);
-    color: white;
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-}
-
-.ayat-actions {
-    display: flex;
-    gap: 10px;
-}
-
-.ayat-action-btn {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    cursor: pointer;
-    transition: all 0.3s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.ayat-action-btn:hover {
-    background: var(--primary);
-    color: white;
-    border-color: var(--primary);
-}
-
-.ayat-action-btn.bookmarked {
-    background: var(--danger);
-    color: white;
-    border-color: var(--danger);
-}
-
-.ayat-arabic {
-    font-family: var(--arabic-font);
-    font-size: 28px;
-    line-height: 2.5;
-    text-align: right;
-    margin-bottom: 1.5rem;
-    padding: 1.5rem;
-    background: var(--light);
-    border-radius: 8px;
-}
-
-.ayat-translation {
-    font-size: 16px;
-    line-height: 1.8;
-    color: var(--text-secondary);
-}
-
-/* Modal */
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
+    font-family: 'Poppins', sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+    margin: 0;
     padding: 20px;
 }
 
-.modal.show {
-    display: flex;
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #fff;
+    padding: 20px 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
-.modal-content {
-    background: white;
-    border-radius: var(--radius);
-    max-width: 600px;
+header {
+    text-align: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+}
+
+h1 {
+    color: #007BFF;
+}
+
+.surah-select {
     width: 100%;
-    max-height: 90vh;
-    overflow: auto;
-    animation: slideUp 0.3s;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
 }
 
-@keyframes slideUp {
-    from {
-        transform: translateY(50px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
+.surah-details {
+    text-align: center;
+    margin-bottom: 25px;
 }
 
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.5rem;
-    border-bottom: 1px solid var(--border);
+.surah-details h2 {
+    font-family: 'Lateef', serif;
+    font-size: 2.5rem;
+    margin-bottom: 5px;
 }
 
-.modal-close {
-    background: transparent;
-    border: none;
-    font-size: 1.5rem;
-    color: var(--text-secondary);
-    cursor: pointer;
+.surah-details p {
+    margin: 4px 0;
+    color: #555;
+    font-style: italic;
 }
 
-.modal-body {
-    padding: 1.5rem;
+.ayah-container {
+    margin-top: 20px;
 }
 
-/* Settings Page */
-.setting-group {
-    background: white;
-    border-radius: var(--radius);
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    box-shadow: var(--shadow);
+.ayah {
+    border-bottom: 1px solid #eee;
+    padding: 20px 0;
+    margin-bottom: 10px;
 }
 
-.setting-group h3 {
-    margin-bottom: 1.5rem;
-    color: var(--text-primary);
-}
-
-.setting-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 0;
-    border-bottom: 1px solid var(--border);
-}
-
-.setting-item:last-child {
+.ayah:last-child {
     border-bottom: none;
 }
 
-.setting-select {
-    padding: 8px 15px;
-    border: 2px solid var(--border);
-    border-radius: 8px;
-    outline: none;
-    cursor: pointer;
-}
-
-.setting-range {
-    flex: 1;
-    margin: 0 15px;
-}
-
-.btn-danger {
-    background: var(--danger);
+.ayah-number {
+    background-color: #007BFF;
     color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: opacity 0.3s;
-}
-
-.btn-danger:hover {
-    opacity: 0.9;
-}
-
-/* Toast Notification */
-.toast {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: var(--dark);
-    color: white;
-    padding: 15px 20px;
-    border-radius: 8px;
-    transform: translateX(400px);
-    transition: transform 0.3s;
-    z-index: 2000;
-}
-
-.toast.show {
-    transform: translateX(0);
-}
-
-/* Mobile Navigation */
-.mobile-nav {
-    display: none;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: white;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-    z-index: 100;
-}
-
-.mobile-nav-item {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: inline-flex;
     align-items: center;
-    padding: 10px;
-    background: transparent;
-    border: none;
-    color: var(--text-secondary);
-    cursor: pointer;
+    justify-content: center;
+    font-weight: bold;
+    margin-bottom: 15px;
 }
 
-.mobile-nav-item.active {
-    color: var(--primary);
-}
-
-.mobile-nav-item i {
-    font-size: 1.2rem;
-    margin-bottom: 4px;
-}
-
-.mobile-nav-item span {
-    font-size: 0.75rem;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .nav-menu {
-        display: none;
-    }
-    
-    .mobile-nav {
-        display: flex;
-    }
-    
-    .hero-section {
-        grid-template-columns: 1fr;
-        text-align: center;
-    }
-    
-    .hero-title {
-        font-size: 2rem;
-    }
-    
-    .surat-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .quick-cards {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .main-content {
-        padding-bottom: 60px;
-    }
-    
-    .ayat-arabic {
-        font-size: 24px;
-    }
-}
-
-/* Bookmarks List */
-.bookmarks-list {
-    display: grid;
-    gap: 1rem;
-}
-
-.bookmark-item {
-    background: white;
-    border-radius: var(--radius);
-    padding: 1.5rem;
-    box-shadow: var(--shadow);
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.bookmark-item:hover {
-    transform: translateX(5px);
-    box-shadow: var(--shadow-lg);
-}
-
-.bookmark-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: start;
-    margin-bottom: 1rem;
-}
-
-.bookmark-surah {
-    font-weight: 600;
-    color: var(--primary);
-}
-
-.bookmark-delete {
-    background: transparent;
-    border: none;
-    color: var(--danger);
-    cursor: pointer;
-    font-size: 1.2rem;
-}
-
-.bookmark-arabic {
-    font-family: var(--arabic-font);
-    font-size: 1.3rem;
+.arabic-text {
+    font-family: 'Lateef', serif;
+    font-size: 2rem;
     text-align: right;
-    margin-bottom: 0.5rem;
+    line-height: 2.5;
+    direction: rtl; /* Penting untuk teks Arab */
 }
 
-.bookmark-translation {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
+.translation-text {
+    font-size: 0.95rem;
+    margin-top: 15px;
+    line-height: 1.6;
+    color: #444;
+    font-style: italic;
 }
 
-/* Empty State */
-.empty-state {
+.loading {
     text-align: center;
-    padding: 3rem;
-    color: var(--text-secondary);
-}
-
-.empty-state i {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-    opacity: 0.5;
+    padding: 20px;
+    font-size: 1.2rem;
+    color: #777;
 }
