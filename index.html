@@ -3,85 +3,306 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Quran - Baca Al-Quran Online</title>
+    <title>MyQuran Web - Al-Quran Digital Indonesia</title>
     <link rel="stylesheet" href="style.css">
+    
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-content">
+            <div class="arabic-logo">بِسْمِ اللَّهِ</div>
+            <div class="spinner"></div>
+            <p>Memuat Al-Quran...</p>
+        </div>
+    </div>
+
     <!-- Header -->
     <header class="header">
         <div class="container">
-            <div class="header-content">
-                <h1 class="logo">📖 Web Quran</h1>
-                <nav class="nav">
-                    <button class="nav-btn active" data-view="surah">Surah</button>
-                    <button class="nav-btn" data-view="juz">Juz</button>
-                    <button class="nav-btn" data-view="bookmark">Bookmark</button>
+            <div class="header-wrapper">
+                <div class="logo">
+                    <i class="fas fa-quran"></i>
+                    <span>MyQuran</span>
+                </div>
+                
+                <nav class="nav-menu">
+                    <button class="nav-item active" data-page="home">
+                        <i class="fas fa-home"></i>
+                        <span>Beranda</span>
+                    </button>
+                    <button class="nav-item" data-page="surat">
+                        <i class="fas fa-book-open"></i>
+                        <span>Surat</span>
+                    </button>
+                    <button class="nav-item" data-page="juz">
+                        <i class="fas fa-bookmark"></i>
+                        <span>Juz</span>
+                    </button>
+                    <button class="nav-item" data-page="bookmarks">
+                        <i class="fas fa-heart"></i>
+                        <span>Tersimpan</span>
+                    </button>
+                    <button class="nav-item" data-page="settings">
+                        <i class="fas fa-cog"></i>
+                        <span>Pengaturan</span>
+                    </button>
                 </nav>
+
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
             </div>
         </div>
     </header>
 
-    <!-- Search Bar -->
-    <div class="search-container">
-        <div class="container">
-            <input type="text" id="searchInput" placeholder="Cari surah..." class="search-input">
-        </div>
-    </div>
-
-    <!-- Loading Spinner -->
-    <div id="loading" class="loading-spinner">
-        <div class="spinner"></div>
-    </div>
-
     <!-- Main Content -->
     <main class="main-content">
-        <div class="container">
-            <!-- Surah List View -->
-            <div id="surahList" class="surah-list view-content active"></div>
+        <!-- Home Page -->
+        <div id="homePage" class="page active">
+            <div class="container">
+                <!-- Hero Section -->
+                <div class="hero-section">
+                    <div class="hero-content">
+                        <h1 class="hero-title">Assalamu'alaikum</h1>
+                        <p class="hero-subtitle">Mari membaca Al-Quran hari ini</p>
+                        <div class="last-read" id="lastRead">
+                            <!-- Will be filled dynamically -->
+                        </div>
+                    </div>
+                    <div class="hero-image">
+                        <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#4F46E5;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                            <rect width="400" height="300" fill="url(#gradient)" rx="20"/>
+                            <text x="200" y="150" font-family="Scheherazade New" font-size="60" fill="white" text-anchor="middle">القرآن</text>
+                        </svg>
+                    </div>
+                </div>
 
-            <!-- Juz List View -->
-            <div id="juzList" class="juz-list view-content"></div>
+                <!-- Quick Access -->
+                <div class="quick-access">
+                    <h2 class="section-title">Akses Cepat</h2>
+                    <div class="quick-cards">
+                        <div class="quick-card" onclick="loadSurahDetail(36)">
+                            <i class="fas fa-star"></i>
+                            <h3>Yasin</h3>
+                            <p>Hati Al-Quran</p>
+                        </div>
+                        <div class="quick-card" onclick="loadSurahDetail(56)">
+                            <i class="fas fa-moon"></i>
+                            <h3>Al-Waqi'ah</h3>
+                            <p>Surat Rezeki</p>
+                        </div>
+                        <div class="quick-card" onclick="loadSurahDetail(67)">
+                            <i class="fas fa-shield-alt"></i>
+                            <h3>Al-Mulk</h3>
+                            <p>Pelindung Siksa</p>
+                        </div>
+                        <div class="quick-card" onclick="loadSurahDetail(55)">
+                            <i class="fas fa-heart"></i>
+                            <h3>Ar-Rahman</h3>
+                            <p>Maha Pengasih</p>
+                        </div>
+                    </div>
+                </div>
 
-            <!-- Bookmark View -->
-            <div id="bookmarkList" class="bookmark-list view-content">
-                <div class="empty-state">
-                    <p>📑 Belum ada bookmark</p>
+                <!-- Prayer Times Widget -->
+                <div class="prayer-widget" id="prayerWidget">
+                    <h2 class="section-title">Waktu Sholat Hari Ini</h2>
+                    <div class="prayer-times" id="prayerTimes">
+                        <!-- Will be filled dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Surat List Page -->
+        <div id="suratPage" class="page">
+            <div class="container">
+                <!-- Search Bar -->
+                <div class="search-section">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchSurat" placeholder="Cari nama surat...">
+                    </div>
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" data-filter="all">Semua</button>
+                        <button class="filter-btn" data-filter="makkiyah">Makkiyah</button>
+                        <button class="filter-btn" data-filter="madaniyah">Madaniyah</button>
+                    </div>
+                </div>
+
+                <!-- Surat Grid -->
+                <div class="surat-grid" id="suratGrid">
+                    <!-- Will be filled dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Juz Page -->
+        <div id="juzPage" class="page">
+            <div class="container">
+                <h1 class="page-title">Juz Al-Quran</h1>
+                <div class="juz-grid" id="juzGrid">
+                    <!-- Will be filled dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Bookmarks Page -->
+        <div id="bookmarksPage" class="page">
+            <div class="container">
+                <h1 class="page-title">Ayat Tersimpan</h1>
+                <div id="bookmarksList" class="bookmarks-list">
+                    <!-- Will be filled dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div id="settingsPage" class="page">
+            <div class="container">
+                <h1 class="page-title">Pengaturan</h1>
+                <div class="settings-content">
+                    <div class="setting-group">
+                        <h3>Tampilan</h3>
+                        <div class="setting-item">
+                            <label>Tema Aplikasi</label>
+                            <select id="themeSelect" class="setting-select">
+                                <option value="light">Terang</option>
+                                <option value="dark">Gelap</option>
+                                <option value="auto">Otomatis</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label>Ukuran Teks Arab</label>
+                            <input type="range" id="arabicSize" min="20" max="40" value="28" class="setting-range">
+                            <span id="arabicSizeValue">28px</span>
+                        </div>
+                        <div class="setting-item">
+                            <label>Ukuran Teks Terjemahan</label>
+                            <input type="range" id="translationSize" min="12" max="20" value="16" class="setting-range">
+                            <span id="translationSizeValue">16px</span>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <h3>Audio</h3>
+                        <div class="setting-item">
+                            <label>Qari Pilihan</label>
+                            <select id="qariSelect" class="setting-select">
+                                <option value="01">Abdul Basit Abdul Samad</option>
+                                <option value="02">Abdul Rahman Al-Sudais</option>
+                                <option value="03">Mishary Rashid Alafasy</option>
+                                <option value="04">Mahmoud Khalil Al-Hussary</option>
+                                <option value="05">Mohamed Siddiq Al-Minshawi</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="autoPlayNext">
+                                Putar Otomatis Ayat Berikutnya
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <h3>Data</h3>
+                        <button class="btn-danger" onclick="clearAllData()">
+                            <i class="fas fa-trash"></i>
+                            Hapus Semua Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Surat Detail Page -->
+        <div id="suratDetail" class="page">
+            <div class="surat-detail-header">
+                <button class="back-button" onclick="backToSuratList()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <div class="surat-info" id="suratInfo">
+                    <!-- Will be filled dynamically -->
+                </div>
+                <button class="audio-toggle" id="audioToggle">
+                    <i class="fas fa-play"></i>
+                </button>
+            </div>
+
+            <!-- Audio Player -->
+            <div class="audio-player" id="audioPlayer">
+                <audio id="suratAudio" controls></audio>
+                <div class="audio-controls">
+                    <button onclick="previousAyat()"><i class="fas fa-backward"></i></button>
+                    <button onclick="togglePlayPause()"><i class="fas fa-play" id="playPauseIcon"></i></button>
+                    <button onclick="nextAyat()"><i class="fas fa-forward"></i></button>
                 </div>
             </div>
 
-            <!-- Surah Detail View -->
-            <div id="surahDetail" class="surah-detail" style="display: none;">
-                <button class="back-btn" onclick="backToList()">← Kembali</button>
-                <div class="surah-header">
-                    <h2 id="surahTitle"></h2>
-                    <p id="surahInfo"></p>
+            <!-- Ayat Container -->
+            <div class="container">
+                <div class="ayat-container" id="ayatContainer">
+                    <!-- Will be filled dynamically -->
                 </div>
-                <div class="audio-controls">
-                    <audio id="audioPlayer" controls></audio>
-                    <select id="qariSelect" class="qari-select">
-                        <option value="01">Abdul Basit Abdul Samad</option>
-                        <option value="02">Abdul Rahman Al-Sudais</option>
-                        <option value="03">Mishary Rashid Alafasy</option>
-                        <option value="04">Mahmoud Khalil Al-Hussary</option>
-                        <option value="05">Mohamed Siddiq Al-Minshawi</option>
-                    </select>
-                </div>
-                <div id="ayatList" class="ayat-list"></div>
             </div>
         </div>
     </main>
 
-    <!-- Modal untuk Tafsir -->
+    <!-- Modal Tafsir -->
     <div id="tafsirModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeTafsir()">&times;</span>
-            <h3>Tafsir</h3>
-            <div id="tafsirContent"></div>
+            <div class="modal-header">
+                <h2>Tafsir</h2>
+                <button class="modal-close" onclick="closeTafsirModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="tafsirContent">
+                <!-- Will be filled dynamically -->
+            </div>
         </div>
     </div>
+
+    <!-- Mobile Navigation -->
+    <nav class="mobile-nav" id="mobileNav">
+        <button class="mobile-nav-item active" data-page="home">
+            <i class="fas fa-home"></i>
+            <span>Beranda</span>
+        </button>
+        <button class="mobile-nav-item" data-page="surat">
+            <i class="fas fa-book-open"></i>
+            <span>Surat</span>
+        </button>
+        <button class="mobile-nav-item" data-page="juz">
+            <i class="fas fa-bookmark"></i>
+            <span>Juz</span>
+        </button>
+        <button class="mobile-nav-item" data-page="bookmarks">
+            <i class="fas fa-heart"></i>
+            <span>Tersimpan</span>
+        </button>
+        <button class="mobile-nav-item" data-page="settings">
+            <i class="fas fa-cog"></i>
+            <span>Pengaturan</span>
+        </button>
+    </nav>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
 
     <script src="script.js"></script>
 </body>
