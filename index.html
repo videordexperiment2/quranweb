@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Al-Quran Digital</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <h1>📖 Al-Quran Digital</h1>
+        <p class="subtitle">القرآن الكريم</p>
+    </header>
+
+    <main>
+        <!-- Search Section -->
+        <section class="search-section">
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Cari surah...">
+                <button id="searchBtn">🔍</button>
+            </div>
+        </section>
+
+        <!-- Surah List -->
+        <section class="surah-list" id="surahList">
+            <h2>Daftar Surah</h2>
+            <div class="surah-grid" id="surahGrid">
+                <!-- Surah cards will be loaded here -->
+            </div>
+        </section>
+
+        <!-- Surah Detail -->
+        <section class="surah-detail" id="surahDetail" style="display: none;">
+            <div class="surah-header">
+                <button id="backBtn" class="back-btn">← Kembali</button>
+                <h2 id="surahTitle"></h2>
+                <div class="surah-info" id="surahInfo"></div>
+            </div>
+            <div class="verses-container" id="versesContainer">
+                <!-- Verses will be loaded here -->
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>© 2024 Al-Quran Digital | Sumber Data: urangbandung/quran</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
