@@ -23,7 +23,7 @@ class QuranApp {
             `;
 
             // Fetch data dari GitHub raw
-            const response = await fetch('https://raw.githubusercontent.com/urangbandung/quran/main/data/quran.json');
+            const response = await fetch('https://github.com/urangbandung/quran/raw/refs/heads/main/data/quran.json');
             
             if (!response.ok) {
                 throw new Error('Gagal memuat data');
