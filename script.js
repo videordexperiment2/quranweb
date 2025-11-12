@@ -1,4 +1,16 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // === Definisi Huruf & Aturan Tajwid ===
+    const SUKUN = '\u0652';
+    const TASHDID = '\u0651';
+    const TANWIN_REGEX = '[\u064b\u064d\u064c]'; // Fathatain, Kasratain, Dammatain
+    
+    const HURUQ_QALQALAH = '[قطبجد]';
+    const HURUQ_IDGHAM_BIGHUNNAH = 'ينمو';
+    const HURUQ_IDGHAM_BILAGHUNNAH = 'لر';
+    const HURUQ_IKHFA = 'تثجذزسشصضطظفقك';
+    const HURUQ_IQLAB = 'ب';
+    const HURUQ_IDGHAM_TOTAL = HURUQ_IDGHAM_BIGHUNNAH + HURUQ_IDGHAM_BILAGHUNNAH;
+
     // === ELEMEN DOM ===
     const loadingOverlay = document.getElementById('loading-overlay');
     const surahListContainer = document.getElementById('surah-list');
@@ -41,15 +53,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // === FUNGSI PEWARNAAN TAJWID (SIMULASI) ===
+    // === FUNGSI PEWARNAAN TAJWID (VERSI BARU) ===
     function applyTajwidColoring(text) {
-        let coloredText = text;
-        coloredText = coloredText.replace(/ٱللَّهِ/g, '<span class="tajwid-lafsalah">ٱللَّهِ</span>');
-        coloredText = coloredText.replace(/([ن|م]\u0651)/g, '<span class="tajwid-ghunnah">$1</span>');
-        coloredText = coloredText.replace(/([^\s]*\u0653[^\s]*)/g, '<span class="tajwid-madd">$1</span>');
-        return coloredText;
-    }
+        let coloredText = ` ${text} `;
 
+        coloredText = coloredText.replace(/(ٱللَّهِ|ٱللَّهَ|ٱللَّهُ)/g, '<span class="tajwid-lafsalah">$1</span>');
+        coloredText = coloredText.replace(/(آ|[^\s]+\u0653[^\s]*)/g, '<span class="tajwid-madd">$1</span>');
+        coloredText = coloredText.replace(/([نم])\u0651/g, '<span class="tajwid-ghunnah">$1' + TASHDID + '</span>');
+        coloredText = coloredText.replace(new RegExp(`(${HURUQ_QALQALAH})${SUKUN}`, 'g'), '<span class="tajwid-qalqalah">$1' + SUKUN + '</span>');
+        
+        const idghamRegex = new RegExp(`(ن${SUKUN}|${TANWIN_REGEX})(\\s*)(${'['+HURUQ_IDGHAM_TOTAL+']'})`, 'g');
+        coloredText = coloredText.replace(idghamRegex, '<span class="tajwid-idgham">$1</span>$2$3');
+        
+        const iqlabRegex = new RegExp(`(ن${SUKUN}|${TANWIN_REGEX})(\\s*)(${HURUQ_IQLAB})`, 'g');
+        coloredText = coloredText.replace(iqlabRegex, '<span class="tajwid-idgham">$1</span>$2$3');
+        
+        const ikhfaRegex = new RegExp(`(ن${SUKUN}|${TANWIN_REGEX})(\\s*)(${'['+HURUQ_IKHFA+']'})`, 'g');
+        coloredText = coloredText.replace(ikhfaRegex, '<span class="tajwid-ikhfa">$1</span>$2$3');
+
+        return coloredText.trim();
+    }
+    
     // === FUNGSI PEMBENTUKAN URL AUDIO ===
     function getPerAyahAudioUrl(surahNum, ayahNumInSurah) {
         const imam = imamData.find(i => i.id == selectedImamId);
@@ -81,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
             surahListContainer.appendChild(surahItem);
         });
     }
-
+    
     function renderSurah(surahNumber) {
         const surah = quranData[surahNumber - 1];
         if (!surah) return;
@@ -115,25 +139,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // === LOGIKA AUDIO PLAYER (LOGIKA BARU) ===
+    // === LOGIKA AUDIO PLAYER ===
     function playFullSurah() {
         audio.pause();
         isPlayingFullSurah = true;
         playerInfo.textContent = `Memutar Surah: ${quranData[currentSurahNumber - 1].asma.id.short}`;
-        playAyah(currentSurahNumber, 0); // Mulai sekuens dari ayat pertama
+        playAyah(currentSurahNumber, 0);
     }
 
     function playAyah(surahNum, ayahIndex, isManualClick = false) {
         if (isManualClick) {
-            isPlayingFullSurah = false; // Hentikan mode sekuens jika user klik ayat manual
+            isPlayingFullSurah = false;
         }
-
         currentSurahNumber = surahNum;
         currentAyahIndex = ayahIndex;
         const surah = quranData[surahNum - 1];
         const ayah = surah.ayahs[ayahIndex];
         const audioUrl = getPerAyahAudioUrl(surahNum, ayah.number.insurah);
-        
         if (!audioUrl) {
             playerInfo.textContent = "Gagal mendapatkan URL audio";
             return;
@@ -177,26 +199,21 @@ document.addEventListener('DOMContentLoaded', () => {
     audio.onerror = () => playerInfo.textContent = "Gagal memuat audio.";
     
     audio.onended = () => {
-        // Logika saat audio selesai
         if (isPlayingFullSurah) {
-            // Jika dalam mode sekuens surah penuh
             const surah = quranData[currentSurahNumber - 1];
             if (currentAyahIndex < surah.ayahs.length - 1) {
-                // Jika bukan ayat terakhir, lanjut ke ayat berikutnya
-                playNext(true); // Kirim flag untuk tetap dalam mode sekuens
+                playNext(true);
             } else {
-                // Jika ini adalah ayat terakhir, sekuens selesai.
                 isPlayingFullSurah = false;
                 playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
                 playerInfo.textContent = `Selesai memutar Surah ${surah.asma.id.short}`;
                 document.querySelectorAll('.ayah.playing').forEach(el => el.classList.remove('playing'));
             }
         } else {
-            // Jika bukan mode sekuens, patuhi pengaturan repeat
             if (repeatMode === 'one') {
                 playAyah(currentSurahNumber, currentAyahIndex, true);
             } else if (repeatMode === 'all') {
-                playNext(false); // Play next, tapi ini adalah interaksi manual
+                playNext(false);
             } else {
                 playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
             }
@@ -204,20 +221,17 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     function playNext(keepFullSurahMode = false) {
-        if (!keepFullSurahMode) {
-            isPlayingFullSurah = false; // Matikan mode sekuens jika ini interaksi manual
-        }
+        if (!keepFullSurahMode) isPlayingFullSurah = false;
         const surah = quranData[currentSurahNumber - 1];
         if (currentAyahIndex < surah.ayahs.length - 1) {
             playAyah(currentSurahNumber, currentAyahIndex + 1);
         } else if (repeatMode === 'all' && !isPlayingFullSurah) {
-            // Hanya loop jika repeat all aktif & BUKAN dalam mode sekuens awal
             playAyah(currentSurahNumber, 0);
         }
     }
 
     function playPrev() {
-        isPlayingFullSurah = false; // Matikan mode sekuens
+        isPlayingFullSurah = false;
         if (currentAyahIndex > 0) playAyah(currentSurahNumber, currentAyahIndex - 1);
     }
     
@@ -291,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const playBtn = e.target.closest('.play-ayah-btn');
         if (playBtn) {
             const ayahIndex = parseInt(playBtn.closest('.ayah').dataset.ayahIndex);
-            playAyah(currentSurahNumber, ayahIndex, true); // `true` menandakan ini play manual per ayat
+            playAyah(currentSurahNumber, ayahIndex, true);
         }
         const bookmarkBtn = e.target.closest('.bookmark-btn');
         if (bookmarkBtn) {
