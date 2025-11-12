@@ -1,3 +1,7 @@
+// ==========================================================
+// == KODE SCRIPT.JS LENGKAP DENGAN PERBAIKAN FINAL ==
+// ==========================================================
+
 document.addEventListener('DOMContentLoaded', () => {
     // === ELEMEN DOM ===
     const loadingOverlay = document.getElementById('loading-overlay');
@@ -82,9 +86,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const surah = quranData[surahNumber - 1];
         if (!surah) return;
         
-        // ================== PERBAIKAN DI SINI ==================
-        const bismillahHtml = (surah.preBismillah && typeof surah.preBismillah === 'object' && surah.preBismillah.text) ? `<p class="bismillah-text">${surah.preBismillah.text.ar}</p>` : '';
-        // =======================================================
+        // ================== INILAH BARIS PERBAIKANNYA ==================
+        const bismillahHtml = (surah.preBismillah && typeof surah.preBismillah === 'object' && surah.preBismillah.text) 
+                              ? `<p class="bismillah-text">${surah.preBismillah.text.ar}</p>` 
+                              : '';
+        // ===============================================================
 
         surahHeader.innerHTML = `<h1>${surah.asma.ar.short}</h1><p>${surah.asma.id.long} • ${surah.ayahCount} Ayat</p>`;
         ayahContainer.innerHTML = bismillahHtml;
