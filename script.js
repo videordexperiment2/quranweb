@@ -159,25 +159,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const targetEl = document.getElementById(`ayah-${surahNumber}-${lastReadAyah}`);
         if (targetEl) {
             setTimeout(() => {
-                targetEl.scrollIntoView({ behavior: 'auto', block: 'start' });
-                updateActiveAyahUI(lastReadAyah); // Tandai sebagai active
+                updateActiveAyahUI(lastReadAyah); // Tandai sebagai active dan scroll
             }, 100);
         }
         updateToggleButtons(); // Update visibility tombol
     }
 
-    // === FUNGSI UNTUK UPDATE ACTIVE AYAH (BOOKMARK) ===
+    // === FUNGSI UNTUK UPDATE ACTIVE AYAH (BOOKMARK) DAN SCROLL KE ATAS ===
     function updateActiveAyahUI(ayahNumInSurah) {
         document.querySelectorAll('.ayah.active').forEach(el => el.classList.remove('active'));
         const el = document.getElementById(`ayah-${currentSurahNumber}-${ayahNumInSurah}`);
-        if (el) el.classList.add('active');
+        if (el) {
+            el.classList.add('active');
+            // Scroll ayat ke paling atas viewport dengan smooth
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Penyesuaian manual untuk memastikan tepat di atas (offset untuk padding/header)
+            ayahContainer.scrollTop = el.offsetTop - 20; // Adjust offset jika perlu
+        }
     }
 
     // === LOGIKA RIWAYAT, SIDEBAR, TEMA & BOOKMARK ===
     function saveReadingHistory(surahNum, ayahNum) { 
         readingHistory[surahNum] = ayahNum; 
         localStorage.setItem('quranReadingHistory', JSON.stringify(readingHistory)); 
-        updateActiveAyahUI(ayahNum); // Update UI active
+        updateActiveAyahUI(ayahNum); // Update UI active dan scroll
     }
     function toggleSidebar() { 
         appContainer.classList.toggle('sidebar-collapsed'); 
@@ -286,6 +291,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const surahNum = parseInt(surahItem.dataset.surahNumber); if (surahNum === currentSurahNumber) return;
         currentSurahNumber = surahNum; audio.pause(); currentAyahIndex = -1; isPlayingFullSurah = false;
         renderSurah(currentSurahNumber); updateActiveSurahItem();
+        // Auto hide sidebar setelah memilih surah (jika saat ini expanded)
+        if (!appContainer.classList.contains('sidebar-collapsed')) {
+            toggleSidebar();
+        }
     });
     ayahContainer.addEventListener('click', (e) => {
         const ayahEl = e.target.closest('.ayah');
