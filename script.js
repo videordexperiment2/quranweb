@@ -1,7 +1,3 @@
-// ==========================================================
-// == KODE SCRIPT.JS LENGKAP DENGAN PERBAIKAN FINAL ==
-// ==========================================================
-
 document.addEventListener('DOMContentLoaded', () => {
     // === ELEMEN DOM ===
     const loadingOverlay = document.getElementById('loading-overlay');
@@ -19,8 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // === STATE APLIKASI ===
     let quranData = [], imamData = [];
     let bookmarks = JSON.parse(localStorage.getItem('quranBookmarks')) || [];
-    let currentSurahNumber = 1, currentAyahIndex = -1;
-    let selectedImamId = localStorage.getItem('selectedImam') || 'alafasy';
+    let currentSurahNumber = 1, currentAyahIndex = -1, isPlayingFullSurah = false;
+    let selectedImamId = localStorage.getItem('selectedImam') || 1; // Gunakan ID angka
     let repeatMode = 'none'; // 'none', 'one', 'all'
     const audio = new Audio();
 
@@ -31,20 +27,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 fetch('https://raw.githubusercontent.com/urangbandung/quran/main/data/quran.json'),
                 fetch('https://raw.githubusercontent.com/urangbandung/quran/main/data/imam.json')
             ]);
-            
             if (!quranResponse.ok || !imamResponse.ok) throw new Error('Gagal memuat data sumber.');
-            
             quranData = await quranResponse.json();
             imamData = await imamResponse.json();
-            
             renderImamList();
             renderSurahList();
             renderSurah(currentSurahNumber);
             initTheme();
-
             loadingOverlay.style.opacity = '0';
             setTimeout(() => loadingOverlay.style.display = 'none', 500);
-
         } catch (error) {
             loadingOverlay.innerHTML = `<p>Error: ${error.message}</p>`;
         }
@@ -59,13 +50,29 @@ document.addEventListener('DOMContentLoaded', () => {
         return coloredText;
     }
 
+    // === FUNGSI PEMBENTUKAN URL AUDIO ===
+    function getFullSurahAudioUrl(surahNum) {
+        const imam = imamData.find(i => i.id == selectedImamId);
+        if (!imam) return null;
+        const surahNumPadded = String(surahNum).padStart(3, '0');
+        return `https://download.quranicaudio.com/quran/${imam.full}/${surahNumPadded}.mp3`;
+    }
+
+    function getPerAyahAudioUrl(surahNum, ayahNumInSurah) {
+        const imam = imamData.find(i => i.id == selectedImamId);
+        if (!imam) return null;
+        const surahNumPadded = String(surahNum).padStart(3, '0');
+        const ayahNumPadded = String(ayahNumInSurah).padStart(3, '0');
+        return `https://everyayah.com/data/${imam.path}/${surahNumPadded}${ayahNumPadded}.mp3`;
+    }
+
     // === FUNGSI RENDER TAMPILAN ===
     function renderImamList() {
         imamData.forEach(imam => {
             const option = document.createElement('option');
             option.value = imam.id;
             option.textContent = imam.name;
-            if (imam.id === selectedImamId) option.selected = true;
+            if (imam.id == selectedImamId) option.selected = true;
             imamSelect.appendChild(option);
         });
     }
@@ -86,15 +93,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const surah = quranData[surahNumber - 1];
         if (!surah) return;
         
-        // ================== INILAH BARIS PERBAIKANNYA ==================
         const bismillahHtml = (surah.preBismillah && typeof surah.preBismillah === 'object' && surah.preBismillah.text) 
                               ? `<p class="bismillah-text">${surah.preBismillah.text.ar}</p>` 
                               : '';
-        // ===============================================================
+                              
+        surahHeader.innerHTML = `
+            <button id="play-full-surah-btn" class="icon-btn" title="Play Seluruh Surah"><i class="fas fa-play-circle"></i></button>
+            <h1>${surah.asma.ar.short}</h1>
+            <p>${surah.asma.id.long} • ${surah.ayahCount} Ayat</p>
+        `;
+        document.getElementById('play-full-surah-btn').addEventListener('click', playFullSurah);
 
-        surahHeader.innerHTML = `<h1>${surah.asma.ar.short}</h1><p>${surah.asma.id.long} • ${surah.ayahCount} Ayat</p>`;
         ayahContainer.innerHTML = bismillahHtml;
-
         surah.ayahs.forEach((ayah, index) => {
             const isBookmarked = bookmarks.some(b => b.surah === surah.number && b.ayah === ayah.number.insurah);
             const coloredArabicText = applyTajwidColoring(ayah.text.ar);
@@ -118,22 +128,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // === LOGIKA AUDIO PLAYER ===
+    function playFullSurah() {
+        isPlayingFullSurah = true;
+        currentAyahIndex = -1;
+        document.querySelectorAll('.ayah.playing').forEach(el => el.classList.remove('playing'));
+        const audioUrl = getFullSurahAudioUrl(currentSurahNumber);
+        if (!audioUrl) {
+            playerInfo.textContent = "Gagal mendapatkan URL audio";
+            return;
+        }
+        audio.src = audioUrl;
+        audio.play().catch(e => console.error("Audio playback error:", e));
+        const surah = quranData[currentSurahNumber - 1];
+        playerInfo.textContent = `Full Surah: ${surah.asma.id.short}`;
+        playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+    }
+
     function playAyah(surahNum, ayahIndex) {
+        isPlayingFullSurah = false;
         currentSurahNumber = surahNum;
         currentAyahIndex = ayahIndex;
         const surah = quranData[surahNum - 1];
-        if (!surah) return;
         const ayah = surah.ayahs[ayahIndex];
-        if (!ayah) return;
-
-        const imam = imamData.find(i => i.id === selectedImamId);
-        if (!imam) return;
-
-        const audioUrl = `${imam.url}/${String(surah.number).padStart(3, '0')}${String(ayah.number.insurah).padStart(3, '0')}.mp3`;
-        
+        const audioUrl = getPerAyahAudioUrl(surahNum, ayah.number.insurah);
+        if (!audioUrl) {
+            playerInfo.textContent = "Gagal mendapatkan URL audio";
+            return;
+        }
         audio.src = audioUrl;
         audio.play().catch(e => console.error("Audio playback error:", e));
-
         updatePlayerUI(surah, ayah);
         updateActiveAyahUI();
     }
@@ -145,6 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateActiveAyahUI() {
         document.querySelectorAll('.ayah.playing').forEach(el => el.classList.remove('playing'));
+        if (isPlayingFullSurah) return;
         const ayah = quranData[currentSurahNumber-1].ayahs[currentAyahIndex];
         if (!ayah) return;
         const el = document.getElementById(`ayah-${currentSurahNumber}-${ayah.number.insurah}`);
@@ -155,12 +179,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function togglePlayPause() {
-        if (audio.src && !audio.paused) {
-            audio.pause();
-        } else if (audio.src && audio.paused) {
-            audio.play();
-        } else if (currentAyahIndex === -1) {
+        if (!audio.src) {
             playAyah(currentSurahNumber, 0);
+        } else if (audio.paused) {
+            audio.play();
+        } else {
+            audio.pause();
         }
     }
     
@@ -169,16 +193,22 @@ document.addEventListener('DOMContentLoaded', () => {
     audio.onerror = () => playerInfo.textContent = "Gagal memuat audio.";
     
     audio.onended = () => {
-        if (repeatMode === 'one') {
-            playAyah(currentSurahNumber, currentAyahIndex);
-        } else if (repeatMode === 'all') {
-            playNext();
+        if (isPlayingFullSurah) {
+            if(repeatMode === 'all' || repeatMode === 'one') playFullSurah();
+            else playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
         } else {
-            playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+            if (repeatMode === 'one') {
+                playAyah(currentSurahNumber, currentAyahIndex);
+            } else if (repeatMode === 'all') {
+                playNext();
+            } else {
+                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+            }
         }
     };
 
     function playNext() {
+        if (isPlayingFullSurah) return;
         const surah = quranData[currentSurahNumber - 1];
         if (currentAyahIndex < surah.ayahs.length - 1) {
             playAyah(currentSurahNumber, currentAyahIndex + 1);
@@ -188,6 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function playPrev() {
+        if (isPlayingFullSurah) return;
         if (currentAyahIndex > 0) playAyah(currentSurahNumber, currentAyahIndex - 1);
     }
     
@@ -247,11 +278,12 @@ document.addEventListener('DOMContentLoaded', () => {
     surahListContainer.addEventListener('click', (e) => {
         const surahItem = e.target.closest('.surah-item');
         if (!surahItem) return;
-
         const surahNum = parseInt(surahItem.dataset.surahNumber);
         if (surahNum === currentSurahNumber) return;
-
         currentSurahNumber = surahNum;
+        audio.pause();
+        currentAyahIndex = -1;
+        isPlayingFullSurah = false;
         renderSurah(currentSurahNumber);
         updateActiveSurahItem();
     });
@@ -278,7 +310,13 @@ document.addEventListener('DOMContentLoaded', () => {
     imamSelect.addEventListener('change', (e) => {
         selectedImamId = e.target.value;
         localStorage.setItem('selectedImam', selectedImamId);
-        if (!audio.paused) playAyah(currentSurahNumber, currentAyahIndex);
+        if (!audio.paused) { // Jika sedang play, langsung putar ulang dengan imam baru
+            if (isPlayingFullSurah) {
+                playFullSurah();
+            } else {
+                playAyah(currentSurahNumber, currentAyahIndex);
+            }
+        }
     });
     
     function updateActiveSurahItem() {

@@ -96,7 +96,17 @@ body {
 .surah-header {
     padding: 20px; text-align: center; border-bottom: 1px solid var(--border-color);
     background-color: var(--bg-light);
+    position: relative; /* Diperlukan untuk positioning tombol */
 }
+
+#play-full-surah-btn {
+    position: absolute;
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+    font-size: 24px;
+}
+
 .surah-header h1 { font-family: 'Scheherazade New', serif; font-size: 3rem; color: var(--accent-gold); }
 .surah-header p { color: var(--text-secondary); font-style: italic; }
 
