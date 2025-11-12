@@ -393,6 +393,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (target.closest('.play-ayah-btn')) {
             if (!audio.paused && ayahEl === currentPlayingAyahEl) {
                 audio.pause(); // Stop jika klik stop di ayat playing
+                currentPlayingAyahEl = null; // Reset segera
+                updateAyahButtonIcons(); // Update ikon kembali ke play
             } else {
                 playAyah(currentSurahNumber, ayahIndex, true);
             }
