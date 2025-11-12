@@ -74,10 +74,6 @@ document.addEventListener('DOMContentLoaded', () => {
             surahItem.dataset.surahNumber = surah.number;
             if (surah.number === currentSurahNumber) surahItem.classList.add('active');
             surahItem.innerHTML = `<div class="surah-number">${surah.number}</div><div class="surah-info"><strong>${surah.asma.id.short}</strong><small>${surah.asma.translation.id} - ${surah.ayahCount} ayat</small></div>`;
-            
-            // PERBAIKAN: Listener tidak lagi ditambahkan di sini.
-            // surahItem.addEventListener('click', ...) <== INI DIHAPUS
-
             surahListContainer.appendChild(surahItem);
         });
     }
@@ -86,7 +82,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const surah = quranData[surahNumber - 1];
         if (!surah) return;
         
-        const bismillahHtml = (surah.preBismillah && surah.number !== 1 && surah.number !== 9) ? `<p class="bismillah-text">${surah.preBismillah.text.ar}</p>` : '';
+        // ================== PERBAIKAN DI SINI ==================
+        const bismillahHtml = (surah.preBismillah && typeof surah.preBismillah === 'object' && surah.preBismillah.text) ? `<p class="bismillah-text">${surah.preBismillah.text.ar}</p>` : '';
+        // =======================================================
 
         surahHeader.innerHTML = `<h1>${surah.asma.ar.short}</h1><p>${surah.asma.id.long} • ${surah.ayahCount} Ayat</p>`;
         ayahContainer.innerHTML = bismillahHtml;
@@ -240,14 +238,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // === EVENT LISTENERS ===
-
-    // PERBAIKAN UTAMA ADA DI SINI: EVENT DELEGATION
     surahListContainer.addEventListener('click', (e) => {
         const surahItem = e.target.closest('.surah-item');
-        if (!surahItem) return; // Jika yang diklik bukan item surah, abaikan
+        if (!surahItem) return;
 
         const surahNum = parseInt(surahItem.dataset.surahNumber);
-        if (surahNum === currentSurahNumber) return; // Jangan lakukan apa-apa jika surah yang sama diklik
+        if (surahNum === currentSurahNumber) return;
 
         currentSurahNumber = surahNum;
         renderSurah(currentSurahNumber);
