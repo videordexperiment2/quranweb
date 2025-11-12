@@ -181,9 +181,9 @@ document.addEventListener('DOMContentLoaded', () => {
             el.classList.add('active');
             // Scroll ayat ke paling atas viewport dengan smooth, tepat di bawah sticky header
             el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            // Penyesuaian manual untuk tepat di bawah header (offset = height header)
+            // Penyesuaian manual untuk tepat di bawah header (offset = height header + border width + extra)
             const headerHeight = surahHeader.offsetHeight || 60; // Default 60px jika tidak terdeteksi
-            ayahContainer.scrollTop = el.offsetTop - headerHeight - 10; // Offset ekstra untuk rapih
+            ayahContainer.scrollTop = el.offsetTop - headerHeight - 2 - 5; // -2 untuk border, -5 untuk extra margin rapih
         }
     }
 
