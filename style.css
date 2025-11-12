@@ -154,7 +154,7 @@ body {
 #repeat-btn { 
     position: absolute; 
     top: 50%; 
-    right: 60px; /* Jarak ke kiri dari play full btn (yang di right: 20px) */
+    right: 90px; /* Geser lebih kiri (dari 60px ke 90px) */
     transform: translateY(-50%); 
     font-size: calc(20px + 0.5vw); 
     background: transparent; /* Transparent/flat */
