@@ -162,7 +162,7 @@ body {
     position: absolute; 
     top: 50%; 
     right: 90px; /* Geser lebih kiri (dari 60px ke 90px) */
-    transform: translateY(-50%); 
+    /* transform: translateY(-50%);  */
     font-size: calc(20px + 0.5vw); 
     background: transparent; /* Transparent/flat */
     color: var(--text-primary); /* Warna sesuai tema */
