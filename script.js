@@ -123,8 +123,10 @@ document.addEventListener('DOMContentLoaded', () => {
         playAyah(currentSurahNumber, 0); // Mulai sekuens dari ayat pertama
     }
 
-    function playAyah(surahNum, ayahIndex, isManualPlay = false) {
-        if(isManualPlay) isPlayingFullSurah = false;
+    function playAyah(surahNum, ayahIndex, isManualClick = false) {
+        if (isManualClick) {
+            isPlayingFullSurah = false; // Hentikan mode sekuens jika user klik ayat manual
+        }
 
         currentSurahNumber = surahNum;
         currentAyahIndex = ayahIndex;
@@ -143,13 +145,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function updatePlayerUI(surah, ayah) {
-        playerInfo.textContent = `S: ${surah.asma.id.short}, A: ${ayah.number.insurah}`;
+        if (!isPlayingFullSurah) {
+            playerInfo.textContent = `S: ${surah.asma.id.short}, A: ${ayah.number.insurah}`;
+        }
         playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
     }
 
     function updateActiveAyahUI() {
         document.querySelectorAll('.ayah.playing').forEach(el => el.classList.remove('playing'));
-        const ayah = quranData[currentSurahNumber-1].ayahs[currentAyahIndex];
+        const ayah = quranData[currentSurahNumber-1]?.ayahs[currentAyahIndex];
         if (!ayah) return;
         const el = document.getElementById(`ayah-${currentSurahNumber}-${ayah.number.insurah}`);
         if(el) {
@@ -173,37 +177,101 @@ document.addEventListener('DOMContentLoaded', () => {
     audio.onerror = () => playerInfo.textContent = "Gagal memuat audio.";
     
     audio.onended = () => {
-        if (repeatMode === 'one' && !isPlayingFullSurah) {
-            playAyah(currentSurahNumber, currentAyahIndex);
-        } else if (isPlayingFullSurah || repeatMode === 'all') {
-            playNext();
+        // Logika saat audio selesai
+        if (isPlayingFullSurah) {
+            // Jika dalam mode sekuens surah penuh
+            const surah = quranData[currentSurahNumber - 1];
+            if (currentAyahIndex < surah.ayahs.length - 1) {
+                // Jika bukan ayat terakhir, lanjut ke ayat berikutnya
+                playNext(true); // Kirim flag untuk tetap dalam mode sekuens
+            } else {
+                // Jika ini adalah ayat terakhir, sekuens selesai.
+                isPlayingFullSurah = false;
+                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+                playerInfo.textContent = `Selesai memutar Surah ${surah.asma.id.short}`;
+                document.querySelectorAll('.ayah.playing').forEach(el => el.classList.remove('playing'));
+            }
         } else {
-            playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
-            document.querySelectorAll('.ayah.playing').forEach(el => el.classList.remove('playing'));
+            // Jika bukan mode sekuens, patuhi pengaturan repeat
+            if (repeatMode === 'one') {
+                playAyah(currentSurahNumber, currentAyahIndex, true);
+            } else if (repeatMode === 'all') {
+                playNext(false); // Play next, tapi ini adalah interaksi manual
+            } else {
+                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+            }
         }
     };
 
-    function playNext() {
+    function playNext(keepFullSurahMode = false) {
+        if (!keepFullSurahMode) {
+            isPlayingFullSurah = false; // Matikan mode sekuens jika ini interaksi manual
+        }
         const surah = quranData[currentSurahNumber - 1];
         if (currentAyahIndex < surah.ayahs.length - 1) {
             playAyah(currentSurahNumber, currentAyahIndex + 1);
-        } else if (repeatMode === 'all' && isPlayingFullSurah) {
-            playAyah(currentSurahNumber, 0); // Loop kembali ke awal
-        } else {
-            // Selesai, hentikan mode sekuens
-            isPlayingFullSurah = false;
-            playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+        } else if (repeatMode === 'all' && !isPlayingFullSurah) {
+            // Hanya loop jika repeat all aktif & BUKAN dalam mode sekuens awal
+            playAyah(currentSurahNumber, 0);
         }
     }
 
     function playPrev() {
+        isPlayingFullSurah = false; // Matikan mode sekuens
         if (currentAyahIndex > 0) playAyah(currentSurahNumber, currentAyahIndex - 1);
     }
     
-    function toggleRepeatMode() { /* ... (tidak berubah) ... */ }
-    function toggleBookmark(surahNum, ayahNum, buttonEl) { /* ... (tidak berubah) ... */ }
-    function initTheme() { /* ... (tidak berubah) ... */ }
-    function toggleTheme() { /* ... (tidak berubah) ... */ }
+    function toggleRepeatMode() {
+        repeatBtn.classList.remove('one');
+        if (repeatMode === 'none') {
+            repeatMode = 'all';
+            repeatBtn.classList.add('active');
+            repeatBtn.title = "Ulangi Semua";
+        } else if (repeatMode === 'all') {
+            repeatMode = 'one';
+            repeatBtn.classList.add('one');
+            repeatBtn.title = "Ulangi Satu";
+        } else {
+            repeatMode = 'none';
+            repeatBtn.classList.remove('active');
+            repeatBtn.title = "Mode Ulangi";
+        }
+    }
+
+    // === LOGIKA BOOKMARK & TEMA ===
+    function toggleBookmark(surahNum, ayahNum, buttonEl) {
+        const bookmarkIndex = bookmarks.findIndex(b => b.surah === surahNum && b.ayah === ayahNum);
+        if (bookmarkIndex > -1) {
+            bookmarks.splice(bookmarkIndex, 1);
+            buttonEl.classList.remove('bookmarked');
+        } else {
+            bookmarks.push({ surah: surahNum, ayah: ayahNum });
+            buttonEl.classList.add('bookmarked');
+        }
+        localStorage.setItem('quranBookmarks', JSON.stringify(bookmarks));
+    }
+
+    function initTheme() {
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        if (savedTheme === 'light') {
+            document.body.classList.add('light-theme');
+            themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
+        } else {
+            document.body.classList.remove('light-theme');
+            themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
+        }
+    }
+
+    function toggleTheme() {
+        document.body.classList.toggle('light-theme');
+        if (document.body.classList.contains('light-theme')) {
+            localStorage.setItem('theme', 'light');
+            themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
+        } else {
+            localStorage.setItem('theme', 'dark');
+            themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
+        }
+    }
     
     // === EVENT LISTENERS ===
     surahListContainer.addEventListener('click', (e) => {
@@ -234,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     playPauseBtn.addEventListener('click', togglePlayPause);
-    nextBtn.addEventListener('click', playNext);
+    nextBtn.addEventListener('click', () => playNext(false));
     prevBtn.addEventListener('click', playPrev);
     repeatBtn.addEventListener('click', toggleRepeatMode);
     themeToggleBtn.addEventListener('click', toggleTheme);
@@ -243,7 +311,6 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedImamId = e.target.value;
         localStorage.setItem('selectedImam', selectedImamId);
         if (!audio.paused) {
-            // Putar ulang dengan qari baru
             playAyah(currentSurahNumber, currentAyahIndex, !isPlayingFullSurah);
         }
     });
