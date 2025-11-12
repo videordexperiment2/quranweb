@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // === FUNGSI UTAMA & INISIALISASI ===
     async function initializeApp() {
         try {
-            // Muat data Quran dan Imam secara paralel
             const [quranResponse, imamResponse] = await Promise.all([
                 fetch('https://raw.githubusercontent.com/urangbandung/quran/main/data/quran.json'),
                 fetch('https://raw.githubusercontent.com/urangbandung/quran/main/data/imam.json')
@@ -34,13 +33,11 @@ document.addEventListener('DOMContentLoaded', () => {
             quranData = await quranResponse.json();
             imamData = await imamResponse.json();
             
-            // Render komponen aplikasi
             renderImamList();
             renderSurahList();
             renderSurah(currentSurahNumber);
             initTheme();
 
-            // Sembunyikan loading overlay
             loadingOverlay.style.opacity = '0';
             setTimeout(() => loadingOverlay.style.display = 'none', 500);
 
@@ -51,13 +48,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === FUNGSI PEWARNAAN TAJWID (SIMULASI) ===
     function applyTajwidColoring(text) {
-        // PENTING: Ini hanya simulasi visual, bukan analisis tajwid yang akurat.
         let coloredText = text;
-        // 1. Lafaz Allah
         coloredText = coloredText.replace(/ٱللَّهِ/g, '<span class="tajwid-lafsalah">ٱللَّهِ</span>');
-        // 2. Ghunnah pada Nun dan Mim Tasydid (مّ / نّ)
         coloredText = coloredText.replace(/([ن|م]\u0651)/g, '<span class="tajwid-ghunnah">$1</span>');
-        // 3. Mad Wajib/Jaiz (tanda alis ~ )
         coloredText = coloredText.replace(/([^\s]*\u0653[^\s]*)/g, '<span class="tajwid-madd">$1</span>');
         return coloredText;
     }
@@ -81,11 +74,10 @@ document.addEventListener('DOMContentLoaded', () => {
             surahItem.dataset.surahNumber = surah.number;
             if (surah.number === currentSurahNumber) surahItem.classList.add('active');
             surahItem.innerHTML = `<div class="surah-number">${surah.number}</div><div class="surah-info"><strong>${surah.asma.id.short}</strong><small>${surah.asma.translation.id} - ${surah.ayahCount} ayat</small></div>`;
-            surahItem.addEventListener('click', () => {
-                currentSurahNumber = surah.number;
-                renderSurah(currentSurahNumber);
-                updateActiveSurahItem();
-            });
+            
+            // PERBAIKAN: Listener tidak lagi ditambahkan di sini.
+            // surahItem.addEventListener('click', ...) <== INI DIHAPUS
+
             surahListContainer.appendChild(surahItem);
         });
     }
@@ -94,8 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const surah = quranData[surahNumber - 1];
         if (!surah) return;
         
-        // Tampilkan Bismillah sebagai teks, bukan gambar
-        const bismillahHtml = surah.preBismillah ? `<p class="bismillah-text">${surah.preBismillah.text.ar}</p>` : '';
+        const bismillahHtml = (surah.preBismillah && surah.number !== 1 && surah.number !== 9) ? `<p class="bismillah-text">${surah.preBismillah.text.ar}</p>` : '';
 
         surahHeader.innerHTML = `<h1>${surah.asma.ar.short}</h1><p>${surah.asma.id.long} • ${surah.ayahCount} Ayat</p>`;
         ayahContainer.innerHTML = bismillahHtml;
@@ -134,7 +125,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const imam = imamData.find(i => i.id === selectedImamId);
         if (!imam) return;
 
-        // URL audio dari file imam.json digabungkan dengan nomor surah dan ayat
         const audioUrl = `${imam.url}/${String(surah.number).padStart(3, '0')}${String(ayah.number.insurah).padStart(3, '0')}.mp3`;
         
         audio.src = audioUrl;
@@ -250,6 +240,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // === EVENT LISTENERS ===
+
+    // PERBAIKAN UTAMA ADA DI SINI: EVENT DELEGATION
+    surahListContainer.addEventListener('click', (e) => {
+        const surahItem = e.target.closest('.surah-item');
+        if (!surahItem) return; // Jika yang diklik bukan item surah, abaikan
+
+        const surahNum = parseInt(surahItem.dataset.surahNumber);
+        if (surahNum === currentSurahNumber) return; // Jangan lakukan apa-apa jika surah yang sama diklik
+
+        currentSurahNumber = surahNum;
+        renderSurah(currentSurahNumber);
+        updateActiveSurahItem();
+    });
+
     ayahContainer.addEventListener('click', (e) => {
         const playBtn = e.target.closest('.play-ayah-btn');
         const bookmarkBtn = e.target.closest('.bookmark-btn');
