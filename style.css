@@ -200,7 +200,7 @@ body {
     position: absolute; 
     top: 50%; 
     right: 20px; 
-    transform: translateY(-50%); 
+    /* transform: translateY(-50%);  */
     font-size: calc(20px + 0.5vw); 
     line-height: 1; /* Sejajarkan dengan repeat */
     vertical-align: middle;
