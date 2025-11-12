@@ -23,21 +23,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // === FUNGSI UTAMA & INISIALISASI ===
     async function initializeApp() {
         try {
+            // ================== PERUBAHAN DI SINI ==================
+            // Mengambil data dari folder lokal, bukan dari URL GitHub
             const [quranResponse, imamResponse] = await Promise.all([
-                fetch('https://raw.githubusercontent.com/urangbandung/quran/main/data/quran.json'),
-                fetch('https://raw.githubusercontent.com/urangbandung/quran/main/data/imam.json')
+                fetch('./data/quran.json'),
+                fetch('./data/imam.json')
             ]);
-            if (!quranResponse.ok || !imamResponse.ok) throw new Error('Gagal memuat data sumber.');
+            // ========================================================
+            
+            if (!quranResponse.ok || !imamResponse.ok) throw new Error('Gagal memuat file data lokal. Pastikan folder "data" dan isinya ada.');
+            
             quranData = await quranResponse.json();
             imamData = await imamResponse.json();
+            
             renderImamList();
             renderSurahList();
             renderSurah(currentSurahNumber);
             initTheme();
+            
             loadingOverlay.style.opacity = '0';
             setTimeout(() => loadingOverlay.style.display = 'none', 500);
+
         } catch (error) {
-            loadingOverlay.innerHTML = `<p>Error: ${error.message}</p>`;
+            loadingOverlay.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
         }
     }
 
@@ -310,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
     imamSelect.addEventListener('change', (e) => {
         selectedImamId = e.target.value;
         localStorage.setItem('selectedImam', selectedImamId);
-        if (!audio.paused) { // Jika sedang play, langsung putar ulang dengan imam baru
+        if (!audio.paused) {
             if (isPlayingFullSurah) {
                 playFullSurah();
             } else {
