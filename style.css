@@ -29,30 +29,57 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: 'Poppins', sans-serif; background-color: var(--bg-dark); color: var(--text-primary); overflow: hidden; transition: background-color 0.3s, color 0.3s; }
 
-/* ... (Kode Overlay Loading, Layout, dan Sidebar sama seperti sebelumnya) ... */
+/* Overlay Loading */
 #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-dark); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; transition: opacity 0.5s ease; }
 .loader { border: 4px solid var(--bg-light); border-top: 4px solid var(--accent-gold); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 20px; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* Layout Utama Aplikasi */
 .app-container { display: flex; height: 100vh; padding-bottom: 60px; }
-.sidebar { width: 320px; background-color: var(--bg-light); display: flex; flex-direction: column; border-right: 1px solid var(--border-color); }
+
+/* Sidebar */
+.sidebar {
+    width: 320px;
+    background-color: var(--bg-light);
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border-color);
+    transition: width 0.3s ease, padding 0.3s ease;
+    flex-shrink: 0; /* Mencegah sidebar menyusut */
+}
 .sidebar-header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
 .icon-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-secondary); }
 .icon-btn:hover { color: var(--accent-gold); }
+
+/* === GAYA BARU: KONDISI SIDEBAR TERSEMBUNYI === */
+.app-container.sidebar-collapsed .sidebar {
+    width: 0;
+    padding: 0;
+    overflow: hidden;
+    border-right: none;
+}
+
 .surah-list-container { overflow-y: auto; flex-grow: 1; }
+/* ... (gaya scrollbar & surah-item sama) ... */
 .surah-item { display: flex; align-items: center; padding: 15px 20px; cursor: pointer; border-bottom: 1px solid var(--border-color); transition: background-color 0.2s ease; }
 .surah-item:hover { background-color: var(--bg-dark); }
 .surah-item.active { background-color: var(--accent-gold); color: var(--bg-dark); font-weight: 600; }
 .surah-item.active .surah-number { background-color: var(--bg-dark); color: var(--accent-gold); }
 .surah-item.active .surah-info small { color: #2d3748; }
-.surah-number { background-color: var(--border-color); width: 35px; height: 35px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-right: 15px; font-size: 14px; font-weight: 600; }
-.surah-info { flex-grow: 1; }
+.surah-number { background-color: var(--border-color); width: 35px; height: 35px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-right: 15px; font-size: 14px; font-weight: 600; flex-shrink: 0; }
+.surah-info { flex-grow: 1; white-space: nowrap; }
 .surah-info small { font-size: 12px; color: var(--text-secondary); }
 .surah-info strong { display: block; line-height: 1.2; }
 
 /* Konten Utama */
 .main-content { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
 .surah-header { padding: 20px; text-align: center; border-bottom: 1px solid var(--border-color); background-color: var(--bg-light); position: relative; }
+
+/* === GAYA BARU: TOMBOL HAMBURGER & PLAY SURAH === */
+#sidebar-toggle-btn { position: absolute; top: 50%; left: 20px; transform: translateY(-50%); font-size: 20px; }
 #play-full-surah-btn { position: absolute; top: 50%; right: 20px; transform: translateY(-50%); font-size: 24px; }
+/* ================================================= */
+
 .surah-header h1 { font-family: 'Scheherazade New', serif; font-size: 3rem; color: var(--accent-gold); }
 .surah-header p { color: var(--text-secondary); font-style: italic; }
 
@@ -68,19 +95,7 @@ body { font-family: 'Poppins', sans-serif; background-color: var(--bg-dark); col
 .ayah-actions button.bookmarked { color: var(--accent-blue); }
 
 .arabic-text { font-family: 'Amiri Quran', serif; font-size: 2.5rem; text-align: right; line-height: 2.8; direction: rtl; margin-bottom: 15px; }
-
-/* ================== GAYA BARU DI SINI ================== */
-.latin-text {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    font-style: italic;
-    margin-top: 20px;
-    line-height: 1.7;
-    border-left: 3px solid var(--border-color);
-    padding-left: 10px;
-}
-/* ======================================================== */
-
+.latin-text { font-size: 0.9rem; color: var(--text-secondary); font-style: italic; margin-top: 20px; line-height: 1.7; border-left: 3px solid var(--border-color); padding-left: 10px; }
 .translation-text { font-size: 0.95rem; margin-top: 15px; line-height: 1.7; color: var(--text-secondary); }
 
 /* Kelas-kelas untuk pewarnaan Tajwid */
@@ -92,7 +107,7 @@ body { font-family: 'Poppins', sans-serif; background-color: var(--bg-dark); col
 .tajwid-madd     { color: var(--tajwid-madd); }
 .tajwid-lafsalah { color: var(--tajwid-lafsalah); }
 
-/* ... (Sisa kode CSS untuk Audio Player dan Responsif sama seperti sebelumnya) ... */
+/* ... (Sisa kode CSS untuk Audio Player dan Responsif sama persis) ... */
 .audio-player { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background-color: var(--bg-light); border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 500; }
 .control-btn { background: none; border: none; color: var(--text-primary); font-size: 20px; cursor: pointer; padding: 10px; width: 45px; position: relative; }
 .control-btn:hover { color: var(--accent-gold); }
@@ -104,10 +119,16 @@ body { font-family: 'Poppins', sans-serif; background-color: var(--bg-dark); col
 
 @media (max-width: 768px) {
     .app-container { flex-direction: column; }
-    .sidebar { width: 100%; height: 40vh; border-right: none; border-bottom: 1px solid var(--border-color); }
-    .main-content { height: 60vh; }
+    .sidebar { position: fixed; height: 100vh; z-index: 600; }
+    .app-container.sidebar-collapsed .main-content { margin-left: 0; }
+    .main-content { transition: margin-left 0.3s ease; margin-left: 320px; }
+    #sidebar-toggle-btn { display: block; }
     .audio-player { flex-wrap: wrap; height: auto; padding: 10px; }
     .player-info { width: 100%; order: -1; text-align: left; margin-bottom: 10px; }
     .player-controls, .player-settings { width: 100%; justify-content: space-between; }
     .arabic-text { font-size: 2rem; }
+}
+
+@media (min-width: 769px) {
+    #sidebar-toggle-btn { display: none; }
 }
