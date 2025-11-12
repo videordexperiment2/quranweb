@@ -16,9 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const surahListContainer = document.getElementById('surah-list');
     const surahHeader = document.getElementById('surah-header');
     const ayahContainer = document.getElementById('ayah-container');
-    const playPauseBtn = document.getElementById('play-pause-btn');
-    const nextBtn = document.getElementById('next-btn');
-    const prevBtn = document.getElementById('prev-btn');
     const imamSelect = document.getElementById('imam-select');
     const playerInfo = document.getElementById('player-info');
     const themeToggleBtn = document.getElementById('theme-toggle-btn');
@@ -306,16 +303,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function updatePlayerUI(surah, ayah) { 
         if (!isPlayingFullSurah) playerInfo.textContent = `S: ${surah.asma.id.short}, A: ${ayah.number.insurah}`; 
         else playerInfo.textContent = `Memutar Surah: ${surah.asma.id.short}`;
-        playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>'; 
     }
-    function togglePlayPause() { if (!audio.src) playAyah(currentSurahNumber, 0, true); else if (audio.paused) audio.play(); else audio.pause(); }
     audio.onplay = () => {
-        playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
         updateAyahButtonIcons();
         updatePlayFullButton();
     };
     audio.onpause = () => {
-        playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
         updateAyahButtonIcons();
         updatePlayFullButton();
     };
@@ -340,18 +333,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     // Stop play, hanya pindah surah
                     isPlayingFullSurah = false;
-                    playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
                     playerInfo.textContent = `Selesai Surah, Pindah ke Surah Berikutnya`;
                 }
             } else {
                 isPlayingFullSurah = false;
-                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
                 playerInfo.textContent = `Selesai memutar seluruh Al-Qur'an`;
             }
         } else {
             if (repeatMode === 'one') playAyah(currentSurahNumber, currentAyahIndex, true);
             else if (repeatMode === 'all') playNext(false);
-            else playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
         }
     };
     function playNext(keepFullSurahMode = false) {
@@ -364,9 +354,22 @@ document.addEventListener('DOMContentLoaded', () => {
     function toggleRepeatMode() {
         const repeatBtn = document.getElementById('repeat-btn');
         repeatBtn.classList.remove('one');
-        if (repeatMode === 'none') { repeatMode = 'all'; repeatBtn.classList.add('active'); repeatBtn.title = "Ulangi Semua"; }
-        else if (repeatMode === 'all') { repeatMode = 'one'; repeatBtn.classList.add('one'); repeatBtn.title = "Ulangi Satu"; }
-        else { repeatMode = 'none'; repeatBtn.classList.remove('active'); repeatBtn.title = "Mode Ulangi"; }
+        if (repeatMode === 'none') { 
+            repeatMode = 'all'; 
+            repeatBtn.classList.add('active'); 
+            repeatBtn.innerHTML = '<i class="fas fa-sync-alt"></i>'; // Icon untuk repeat all
+            repeatBtn.title = "Ulangi Semua"; 
+        } else if (repeatMode === 'all') { 
+            repeatMode = 'one'; 
+            repeatBtn.classList.add('one'); 
+            repeatBtn.innerHTML = '<i class="fas fa-sync"></i>'; // Icon untuk repeat one dengan "1" after
+            repeatBtn.title = "Ulangi Satu"; 
+        } else { 
+            repeatMode = 'none'; 
+            repeatBtn.classList.remove('active'); 
+            repeatBtn.innerHTML = '<i class="fas fa-sync"></i>'; // Icon untuk off
+            repeatBtn.title = "Mode Ulangi"; 
+        }
     }
     
     // === EVENT LISTENERS ===
@@ -396,9 +399,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Klik pada ayat: Aktifkan dan pindah bookmark (tanpa tombol bookmark)
         saveReadingHistory(currentSurahNumber, quranData[currentSurahNumber - 1].ayahs[ayahIndex].number.insurah);
     });
-    playPauseBtn.addEventListener('click', togglePlayPause);
-    nextBtn.addEventListener('click', () => playNext(false));
-    prevBtn.addEventListener('click', playPrev);
     themeToggleBtn.addEventListener('click', toggleTheme);
     imamSelect.addEventListener('change', (e) => {
         selectedImamId = e.target.value; localStorage.setItem('selectedImam', selectedImamId);

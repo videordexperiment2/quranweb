@@ -25,9 +25,11 @@
         <aside class="sidebar">
             <div class="sidebar-header">
                 <h2>Daftar Surah</h2>
-                <input type="text" id="surah-search" placeholder="Cari Surah (nama atau nomor)..."> <!-- Input search baru -->
-                <button id="theme-toggle-btn" class="icon-btn" title="Ganti Tema"><i class="fas fa-sun"></i></button>
-                <button id="sidebar-hide-btn" class="icon-btn" title="Sembunyikan Daftar Surah"><i class="fas fa-eye-slash"></i></button> <!-- Tombol hide baru -->
+                <input type="text" id="surah-search" placeholder="Cari Surah (nama atau nomor)..."> <!-- Input search -->
+                <div class="sidebar-buttons"> <!-- Wrapper untuk tombol berjejer -->
+                    <button id="theme-toggle-btn" class="icon-btn" title="Ganti Tema"><i class="fas fa-sun"></i></button>
+                    <button id="sidebar-hide-btn" class="icon-btn" title="Sembunyikan Daftar Surah"><i class="fas fa-eye-slash"></i></button>
+                </div>
             </div>
             <div class="surah-list-container" id="surah-list">
                 <!-- Daftar Surah akan dimuat oleh JavaScript di sini -->
@@ -46,19 +48,13 @@
         </main>
     </div>
 
-    <!-- Pemutar Audio yang Tetap di Bawah -->
+    <!-- Pemutar Audio yang Tetap di Bawah (tanpa player-controls) -->
     <footer class="audio-player" id="audio-player">
-        <div class="player-controls">
-            <button id="prev-btn" class="control-btn" title="Ayat Sebelumnya"><i class="fas fa-step-backward"></i></button>
-            <button id="play-pause-btn" class="control-btn play" title="Play/Pause"><i class="fas fa-play"></i></button>
-            <button id="next-btn" class="control-btn" title="Ayat Selanjutnya"><i class="fas fa-step-forward"></i></button>
-        </div>
         <div class="player-info" id="player-info">
             <!-- Teks default dihilangkan; akan diupdate oleh JS -->
         </div>
         <div class="player-settings">
             <select id="imam-select" title="Pilih Qari"></select>
-            <!-- Tombol repeat dipindah ke header surah -->
         </div>
     </footer>
 

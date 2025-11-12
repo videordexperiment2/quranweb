@@ -61,6 +61,12 @@ body {
     flex-shrink: 0; /* Mencegah sidebar menyusut */
 }
 .sidebar-header { padding: 15px 20px; display: flex; flex-direction: column; align-items: center; border-bottom: 1px solid var(--border-color); } /* Ubah ke column untuk search di atas */
+.sidebar-buttons { /* Wrapper untuk tombol berjejer */
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 10px;
+}
 #surah-search { /* Style input search */
     width: 100%;
     padding: 8px 12px;
@@ -184,15 +190,13 @@ body {
 
 /* ... (Sisa kode CSS untuk Audio Player dan Responsif sama persis) ... */
 .audio-player { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background-color: var(--bg-light); border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 500; }
-.control-btn { background: none; border: none; color: var(--text-primary); font-size: calc(18px + 0.5vw); cursor: pointer; padding: 10px; width: 45px; position: relative; }
-.control-btn:hover { color: var(--accent-gold); }
 .player-info { flex-grow: 1; text-align: center; color: var(--text-secondary); font-size: calc(12px + 0.3vw); }
 .player-settings { display: flex; align-items: center; }
 #imam-select { background-color: var(--bg-dark); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 5px; padding: 5px 8px; margin-right: 15px; font-size: calc(12px + 0.3vw); }
 /* #repeat-btn pindah ke header, style di atas */
 
-#repeat-btn.active { color: var(--accent-blue); }
-#repeat-btn.one::after { content: "1"; font-size: 10px; position: absolute; top: 8px; right: 8px; font-family: 'Poppins', sans-serif; font-weight: bold; }
+#repeat-btn.active { color: var(--accent-gold); } /* Warna gold untuk repeat all */
+#repeat-btn.one::after { content: "1"; font-size: 10px; position: absolute; top: 8px; right: 8px; font-family: 'Poppins', sans-serif; font-weight: bold; color: var(--accent-blue); }
 
 /* Media Queries untuk Responsif */
 @media (max-width: 768px) {
@@ -207,7 +211,7 @@ body {
     .surah-header { padding-top: 10px; padding-bottom: 10px; } /* Padding lebih ringkas untuk sticky */
     .audio-player { flex-wrap: wrap; height: auto; padding: 10px; }
     .player-info { width: 100%; order: -1; text-align: left; margin-bottom: 10px; }
-    .player-controls, .player-settings { width: 100%; justify-content: space-between; }
+    .player-settings { width: 100%; justify-content: space-between; }
     .arabic-text { font-size: calc(1.8rem + 1vw); }
     #surah-search { font-size: 12px; } /* Adjust ukuran di mobile */
 }
