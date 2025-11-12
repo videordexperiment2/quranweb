@@ -159,12 +159,16 @@ body {
     font-size: calc(20px + 0.5vw); 
     background: transparent; /* Transparent/flat */
     color: var(--text-primary); /* Warna sesuai tema */
-    transition: color 0.2s; /* Hanya transisi warna, tanpa scale untuk flat */
     border: none; /* Tanpa border */
     opacity: 1; /* Full opacity, no semi-transparent */
     line-height: 1; /* Stabilkan vertikal alignment */
     vertical-align: middle; /* Pastikan tidak shifting posisi */
-    height: 30px; /* Fixed height untuk stabil posisi */
+    height: 24px; /* Fixed height lebih kecil untuk stabil dan sejajar */
+    width: 24px; /* Fixed width untuk kunci posisi */
+    display: inline-block; /* Block-like untuk no reflow */
+    text-align: center; /* Center ikon */
+    pointer-events: auto; /* Pastikan interaksi normal */
+    transition: none; /* Hilangkan semua transisi untuk stabilitas maksimal */
 }
 #repeat-btn:hover { 
     color: var(--accent-gold); 
@@ -177,11 +181,12 @@ body {
     content: "1"; 
     font-size: 8px; /* Kecilkan agar tidak push layout */
     position: absolute; 
-    top: 10px; /* Adjust posisi agar stabil */
-    right: 5px; 
+    top: 6px; /* Adjust posisi agar stabil dan overlap tanpa shift */
+    right: -2px; 
     font-family: 'Poppins', sans-serif; 
     font-weight: bold; 
     color: var(--accent-blue); 
+    pointer-events: none; /* No interaction on "1" */
 }
 
 #play-full-surah-btn { 
@@ -192,7 +197,10 @@ body {
     font-size: calc(20px + 0.5vw); 
     line-height: 1; /* Sejajarkan dengan repeat */
     vertical-align: middle;
-    height: 30px; /* Fixed height untuk sejajar */
+    height: 24px; /* Fixed height untuk sejajar (sama dengan repeat) */
+    width: 24px; /* Fixed width */
+    display: inline-block;
+    text-align: center;
 }
 
 .surah-header h1 { font-family: 'Scheherazade New', serif; font-size: calc(2.5rem + 1vw); color: var(--accent-gold); margin: 5px 0; } /* Kurangi margin untuk lebih atas */
