@@ -88,6 +88,13 @@ body {
     cursor: pointer; 
     color: var(--text-secondary); 
     transition: color 0.2s, transform 0.2s, opacity 0.3s; /* Transisi profesional */
+    opacity: 1;
+    line-height: 1;
+    vertical-align: middle;
+    height: 24px; /* Fixed height untuk stabilitas */
+    width: 24px;
+    display: inline-block;
+    text-align: center;
 }
 .icon-btn:hover { color: var(--accent-gold); transform: scale(1.1); } /* Efek hover profesional */
 
@@ -159,16 +166,16 @@ body {
     font-size: calc(20px + 0.5vw); 
     background: transparent; /* Transparent/flat */
     color: var(--text-primary); /* Warna sesuai tema */
+    transition: color 0.2s; /* Hanya transisi warna, tanpa scale untuk flat */
     border: none; /* Tanpa border */
     opacity: 1; /* Full opacity, no semi-transparent */
     line-height: 1; /* Stabilkan vertikal alignment */
     vertical-align: middle; /* Pastikan tidak shifting posisi */
     height: 24px; /* Fixed height lebih kecil untuk stabil dan sejajar */
     width: 24px; /* Fixed width untuk kunci posisi */
-    display: inline-block; /* Block-like untuk no reflow */
-    text-align: center; /* Center ikon */
+    display: inline-block;
+    text-align: center;
     pointer-events: auto; /* Pastikan interaksi normal */
-    transition: none; /* Hilangkan semua transisi untuk stabilitas maksimal */
 }
 #repeat-btn:hover { 
     color: var(--accent-gold); 
