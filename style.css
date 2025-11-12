@@ -5,6 +5,7 @@ body {
     color: #333;
     margin: 0;
     padding: 20px;
+    line-height: 1.6;
 }
 
 .container {
@@ -33,6 +34,7 @@ h1 {
     font-size: 16px;
     border-radius: 5px;
     border: 1px solid #ccc;
+    margin-top: 10px;
 }
 
 .surah-details {
@@ -97,7 +99,8 @@ h1 {
 
 .loading {
     text-align: center;
-    padding: 20px;
+    padding: 40px 20px;
     font-size: 1.2rem;
     color: #777;
+    font-style: italic;
 }
