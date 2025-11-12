@@ -130,6 +130,15 @@ body {
 }
 /* ================================================= */
 
+/* Style untuk tombol repeat di header (sebelah kiri play full) */
+#repeat-btn { 
+    position: absolute; 
+    top: 50%; 
+    right: 60px; /* Jarak ke kiri dari play full btn (yang di right: 20px) */
+    transform: translateY(-50%); 
+    font-size: calc(20px + 0.5vw); 
+}
+
 #play-full-surah-btn { position: absolute; top: 50%; right: 20px; transform: translateY(-50%); font-size: calc(20px + 0.5vw); }
 
 .surah-header h1 { font-family: 'Scheherazade New', serif; font-size: calc(2.5rem + 1vw); color: var(--accent-gold); margin: 5px 0; } /* Kurangi margin untuk lebih atas */
@@ -145,7 +154,6 @@ body {
 .ayah-number { background-color: var(--border-color); padding: 5px 12px; border-radius: 15px; font-size: calc(12px + 0.3vw); font-weight: 600; }
 .ayah-actions button { background: none; border: none; color: var(--text-secondary); font-size: calc(16px + 0.5vw); cursor: pointer; margin-left: 15px; transition: color 0.2s; }
 .ayah-actions button:hover { color: var(--accent-gold); }
-.ayah-actions button.bookmarked { color: var(--accent-blue); }
 
 .arabic-text { font-family: 'Amiri Quran', serif; font-size: calc(2rem + 1vw); text-align: right; line-height: 2.8; direction: rtl; margin-bottom: 15px; }
 .latin-text { font-size: calc(0.8rem + 0.3vw); color: var(--text-secondary); font-style: italic; margin-top: 20px; line-height: 1.7; border-left: 3px solid var(--border-color); padding-left: 10px; }
@@ -167,6 +175,8 @@ body {
 .player-info { flex-grow: 1; text-align: center; color: var(--text-secondary); font-size: calc(12px + 0.3vw); }
 .player-settings { display: flex; align-items: center; }
 #imam-select { background-color: var(--bg-dark); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 5px; padding: 5px 8px; margin-right: 15px; font-size: calc(12px + 0.3vw); }
+/* #repeat-btn pindah ke header, style di atas */
+
 #repeat-btn.active { color: var(--accent-blue); }
 #repeat-btn.one::after { content: "1"; font-size: 10px; position: absolute; top: 8px; right: 8px; font-family: 'Poppins', sans-serif; font-weight: bold; }
 
