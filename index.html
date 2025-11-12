@@ -3,34 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Quran Sederhana</title>
+    <title>Quran Digital Profesional</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts untuk Tipografi -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lateef&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- Font Awesome untuk Ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Web Quran Sederhana</h1>
-            <p>Pilih surah yang ingin dibaca:</p>
-            <select id="surah-select" class="surah-select">
-                <option value="">-- Pilih Surah --</option>
-            </select>
-        </header>
 
-        <main id="content-area">
-            <div id="surah-details" class="surah-details">
-                <!-- Detail surah akan ditampilkan di sini -->
+    <div id="loading-overlay">
+        <div class="loader"></div>
+        <p>Memuat Data Al-Qur'an...</p>
+    </div>
+
+    <div class="app-container">
+        <!-- Sidebar untuk Daftar Surah dan Pengaturan -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Daftar Surah</h2>
             </div>
-            <div id="loading" class="loading">
-                Memuat data Al-Qur'an...
+            <div class="surah-list-container" id="surah-list">
+                <!-- Daftar Surah akan dimuat oleh JavaScript di sini -->
             </div>
-            <div id="ayah-container" class="ayah-container">
-                <!-- Daftar ayat akan ditampilkan di sini -->
+        </aside>
+
+        <!-- Konten Utama untuk Menampilkan Ayat -->
+        <main class="main-content">
+            <header class="surah-header" id="surah-header">
+                <!-- Detail Surah akan dimuat di sini -->
+            </header>
+            <div class="ayah-list-container" id="ayah-container">
+                <!-- Daftar Ayat akan dimuat di sini -->
             </div>
         </main>
     </div>
+
+    <!-- Pemutar Audio yang Tetap di Bawah -->
+    <footer class="audio-player" id="audio-player">
+        <div class="player-controls">
+            <button id="prev-btn" class="control-btn" title="Ayat Sebelumnya"><i class="fas fa-step-backward"></i></button>
+            <button id="play-pause-btn" class="control-btn play" title="Play/Pause"><i class="fas fa-play"></i></button>
+            <button id="next-btn" class="control-btn" title="Ayat Selanjutnya"><i class="fas fa-step-forward"></i></button>
+        </div>
+        <div class="player-info" id="player-info">
+            Pilih ayat untuk diputar
+        </div>
+        <div class="player-settings">
+            <select id="imam-select" title="Pilih Qari"></select>
+            <button id="repeat-btn" class="control-btn" title="Mode Ulangi"><i class="fas fa-sync"></i></button>
+        </div>
+    </footer>
 
     <script src="script.js"></script>
 </body>
