@@ -2,90 +2,64 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quran Digital Profesional</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
-
-    <!-- Google Fonts -->
+    <!-- Google Fonts untuk Tipografi -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Poppins:wght@300;400;600&family=Scheherazade+New:wght@700&display=swap" rel="stylesheet">
-
-    <!-- Font Awesome -->
+    <!-- Font Awesome untuk Ikon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
 </head>
 <body>
 
-<div id="loading-overlay">
-    <div class="loader"></div>
-    <p>Memuat Data Al‑Qur'an & Qari...</p>
-</div>
+    <div id="loading-overlay">
+        <div class="loader"></div>
+        <p>Memuat Data Al-Qur'an & Qari...</p>
+    </div>
 
-<div class="app-container" id="app-container">
-    <!-- BACKDROP (mobile) -->
-    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
-
-    <!-- ===== SIDEBAR (list of Surahs) ===== -->
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <h2>Daftar Surah</h2>
-            <div class="sidebar-actions">
-                <!-- Only the theme‑toggle stays inside the sidebar -->
-                <button id="theme-toggle-btn" class="icon-btn" title="Ganti Tema">
-                    <i class="fas fa-sun"></i>
-                </button>
+    <div class="app-container" id="app-container">
+        <!-- Sidebar untuk Daftar Surah dan Pengaturan -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Daftar Surah</h2>
+                <button id="theme-toggle-btn" class="icon-btn" title="Ganti Tema"><i class="fas fa-sun"></i></button>
             </div>
+            <div class="surah-list-container" id="surah-list">
+                <!-- Daftar Surah akan dimuat oleh JavaScript di sini -->
+            </div>
+        </aside>
+
+        <!-- Konten Utama untuk Menampilkan Ayat -->
+        <main class="main-content">
+            <header class="surah-header" id="surah-header">
+                <!-- Tombol Sidebar Toggle ditambahkan di sini oleh JS -->
+                <!-- Detail Surah akan dimuat di sini -->
+            </header>
+            <div class="ayah-list-container" id="ayah-container">
+                <!-- Daftar Ayat akan dimuat di sini -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Pemutar Audio yang Tetap di Bawah -->
+    <footer class="audio-player" id="audio-player">
+        <div class="player-controls">
+            <button id="prev-btn" class="control-btn" title="Ayat Sebelumnya"><i class="fas fa-step-backward"></i></button>
+            <button id="play-pause-btn" class="control-btn play" title="Play/Pause"><i class="fas fa-play"></i></button>
+            <button id="next-btn" class="control-btn" title="Ayat Selanjutnya"><i class="fas fa-step-forward"></i></button>
         </div>
-        <div class="surah-list-container" id="surah-list"></div>
-    </aside>
+        <div class="player-info" id="player-info">
+            Pilih ayat untuk diputar
+        </div>
+        <div class="player-settings">
+            <select id="imam-select" title="Pilih Qari"></select>
+            <button id="repeat-btn" class="control-btn" title="Mode Ulangi"><i class="fas fa-sync"></i></button>
+        </div>
+    </footer>
 
-    <!-- ===== FLOATING UNHIDE BUTTON (appears when the list is hidden) ===== -->
-    <button id="sidebar-unhide-btn" class="icon-btn" title="Tampilkan Daftar Surah">
-        <i class="fas fa-eye"></i>
-    </button>
-
-    <!-- ===== MAIN CONTENT (the verses) ===== -->
-    <main class="main-content">
-        <header class="surah-header" id="surah-header">
-            <!-- Hamburger (hidden on desktop) -->
-            <button id="sidebar-toggle-btn" class="icon-btn" title="Tampilkan/Sembunyikan Daftar Surah">
-                <i class="fas fa-bars"></i>
-            </button>
-            <!-- Play‑whole‑surah button -->
-            <button id="play-full-surah-btn" class="icon-btn" title="Play Seluruh Surah">
-                <i class="fas fa-play-circle"></i>
-            </button>
-            <!-- Title + subtitle will be filled by JS -->
-        </header>
-        <div class="ayah-list-container" id="ayah-container"></div>
-    </main>
-</div>
-
-<!-- ===== AUDIO PLAYER (fixed at the bottom) ===== -->
-<footer class="audio-player" id="audio-player">
-    <div class="player-controls">
-        <button id="prev-btn" class="control-btn" title="Ayat Sebelumnya">
-            <i class="fas fa-step-backward"></i>
-        </button>
-        <button id="play-pause-btn" class="control-btn play" title="Play/Pause">
-            <i class="fas fa-play"></i>
-        </button>
-        <button id="next-btn" class="control-btn" title="Ayat Selanjutnya">
-            <i class="fas fa-step-forward"></i>
-        </button>
-    </div>
-    <div class="player-info" id="player-info">
-        Pilih ayat untuk diputar
-    </div>
-    <div class="player-settings">
-        <select id="imam-select" title="Pilih Qari"></select>
-        <button id="repeat-btn" class="control-btn" title="Mode Ulangi">
-            <i class="fas fa-sync"></i>
-        </button>
-    </div>
-</footer>
-
-<script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
