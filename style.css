@@ -60,13 +60,12 @@ body {
     transition: width 0.3s ease, padding 0.3s ease;
     flex-shrink: 0; /* Mencegah sidebar menyusut */
 }
-.sidebar-header { padding: 20px; display: flex; flex-direction: column; align-items: center; border-bottom: 1px solid var(--border-color); position: relative; } /* Tambah padding untuk ruang lebih lebar */
-.sidebar-top-buttons { /* Wrapper untuk tombol di pojok kanan atas */
-    position: absolute;
-    top: 25px; /* Geser turun untuk tambah spasi vertikal */
-    right: 15px; /* Adjust agar tidak terlalu mepet kanan */
+.sidebar-header { padding: 25px; display: flex; flex-direction: column; align-items: center; border-bottom: 1px solid var(--border-color); position: relative; } /* Kembalikan padding lebih besar untuk spasi vertikal */
+.sidebar-bottom-buttons { /* Wrapper baru untuk tombol di bawah search, kiri-kanan */
     display: flex;
-    gap: 15px; /* Jarak antar tombol lebih lebar untuk rapih */
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 15px; /* Tambah spasi vertikal dari search box */
 }
 #surah-search { /* Style input search */
     width: 100%;
