@@ -63,7 +63,7 @@ body {
 .sidebar-header { padding: 20px; display: flex; flex-direction: column; align-items: center; border-bottom: 1px solid var(--border-color); position: relative; } /* Tambah padding untuk ruang lebih lebar */
 .sidebar-top-buttons { /* Wrapper untuk tombol di pojok kanan atas */
     position: absolute;
-    top: 15px; /* Adjust agar tidak terlalu mepet atas */
+    top: 25px; /* Geser turun untuk tambah spasi vertikal */
     right: 15px; /* Adjust agar tidak terlalu mepet kanan */
     display: flex;
     gap: 15px; /* Jarak antar tombol lebih lebar untuk rapih */
@@ -161,8 +161,10 @@ body {
     background: transparent; /* Transparent/flat */
     color: var(--text-primary); /* Warna sesuai tema */
     transition: color 0.2s; /* Hanya transisi warna, tanpa scale untuk flat */
+    border: none; /* Tanpa border */
+    opacity: 1; /* Full opacity, no semi-transparent */
 }
-#repeat-btn:hover { color: var(--accent-gold); }
+#repeat-btn:hover { color: var(--accent-gold); transform: none; } /* No scale, only color change for flat */
 #repeat-btn.active { color: var(--accent-gold); } /* Warna gold untuk repeat all */
 #repeat-btn.one { color: var(--accent-blue); } /* Warna blue untuk repeat one */
 
