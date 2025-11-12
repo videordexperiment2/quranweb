@@ -164,6 +164,7 @@ body {
     opacity: 1; /* Full opacity, no semi-transparent */
     line-height: 1; /* Stabilkan vertikal alignment */
     vertical-align: middle; /* Pastikan tidak shifting posisi */
+    height: 30px; /* Fixed height untuk stabil posisi */
 }
 #repeat-btn:hover { 
     color: var(--accent-gold); 
@@ -171,6 +172,17 @@ body {
 }
 #repeat-btn.active { color: var(--accent-gold); } /* Warna gold untuk repeat all */
 #repeat-btn.one { color: var(--accent-blue); } /* Warna blue untuk repeat one */
+
+#repeat-btn.one::after { 
+    content: "1"; 
+    font-size: 8px; /* Kecilkan agar tidak push layout */
+    position: absolute; 
+    top: 10px; /* Adjust posisi agar stabil */
+    right: 5px; 
+    font-family: 'Poppins', sans-serif; 
+    font-weight: bold; 
+    color: var(--accent-blue); 
+}
 
 #play-full-surah-btn { position: absolute; top: 50%; right: 20px; transform: translateY(-50%); font-size: calc(20px + 0.5vw); }
 
