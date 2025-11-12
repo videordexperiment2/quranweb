@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // === Definisi Huruf & Aturan Tajwid ===
     const SUKUN = '\u0652';
     const TASHDID = '\u0651';
-    const TANWIN_REGEX = '[\u064b\u064d\u064c]'; // Fathatain, Kasratain, Dammatain
+    const TANWIN_REGEX = '[\u064b\u064d\u064c]';
     
     const HURUQ_QALQALAH = '[قطبجد]';
     const HURUQ_IDGHAM_BIGHUNNAH = 'ينمو';
@@ -56,21 +56,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // === FUNGSI PEWARNAAN TAJWID (VERSI BARU) ===
     function applyTajwidColoring(text) {
         let coloredText = ` ${text} `;
-
         coloredText = coloredText.replace(/(ٱللَّهِ|ٱللَّهَ|ٱللَّهُ)/g, '<span class="tajwid-lafsalah">$1</span>');
         coloredText = coloredText.replace(/(آ|[^\s]+\u0653[^\s]*)/g, '<span class="tajwid-madd">$1</span>');
         coloredText = coloredText.replace(/([نم])\u0651/g, '<span class="tajwid-ghunnah">$1' + TASHDID + '</span>');
-        coloredText = coloredText.replace(new RegExp(`(${HURUQ_QALQALAH})${SUKUN}`, 'g'), '<span class="tajwid-qalqalah">$1' + SUKUN + '</span>');
-        
+        coloredText = coloredText.replace(new RegExp(`(${HURUQ_QALQALAH})${SUKUN}`, 'g'), '<span class="tajwid-qalqalah">$1' + SUKUND + '</span>');
         const idghamRegex = new RegExp(`(ن${SUKUN}|${TANWIN_REGEX})(\\s*)(${'['+HURUQ_IDGHAM_TOTAL+']'})`, 'g');
         coloredText = coloredText.replace(idghamRegex, '<span class="tajwid-idgham">$1</span>$2$3');
-        
         const iqlabRegex = new RegExp(`(ن${SUKUN}|${TANWIN_REGEX})(\\s*)(${HURUQ_IQLAB})`, 'g');
         coloredText = coloredText.replace(iqlabRegex, '<span class="tajwid-idgham">$1</span>$2$3');
-        
         const ikhfaRegex = new RegExp(`(ن${SUKUN}|${TANWIN_REGEX})(\\s*)(${'['+HURUQ_IKHFA+']'})`, 'g');
         coloredText = coloredText.replace(ikhfaRegex, '<span class="tajwid-ikhfa">$1</span>$2$3');
-
         return coloredText.trim();
     }
     
@@ -141,201 +136,97 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === LOGIKA AUDIO PLAYER ===
     function playFullSurah() {
-        audio.pause();
-        isPlayingFullSurah = true;
+        audio.pause(); isPlayingFullSurah = true;
         playerInfo.textContent = `Memutar Surah: ${quranData[currentSurahNumber - 1].asma.id.short}`;
         playAyah(currentSurahNumber, 0);
     }
-
     function playAyah(surahNum, ayahIndex, isManualClick = false) {
-        if (isManualClick) {
-            isPlayingFullSurah = false;
-        }
-        currentSurahNumber = surahNum;
-        currentAyahIndex = ayahIndex;
-        const surah = quranData[surahNum - 1];
-        const ayah = surah.ayahs[ayahIndex];
+        if (isManualClick) isPlayingFullSurah = false;
+        currentSurahNumber = surahNum; currentAyahIndex = ayahIndex;
+        const surah = quranData[surahNum - 1], ayah = surah.ayahs[ayahIndex];
         const audioUrl = getPerAyahAudioUrl(surahNum, ayah.number.insurah);
-        if (!audioUrl) {
-            playerInfo.textContent = "Gagal mendapatkan URL audio";
-            return;
-        }
-        audio.src = audioUrl;
-        audio.play().catch(e => console.error("Audio playback error:", e));
-        updatePlayerUI(surah, ayah);
-        updateActiveAyahUI();
+        if (!audioUrl) { playerInfo.textContent = "Gagal mendapatkan URL audio"; return; }
+        audio.src = audioUrl; audio.play().catch(e => console.error("Audio playback error:", e));
+        updatePlayerUI(surah, ayah); updateActiveAyahUI();
     }
-    
-    function updatePlayerUI(surah, ayah) {
-        if (!isPlayingFullSurah) {
-            playerInfo.textContent = `S: ${surah.asma.id.short}, A: ${ayah.number.insurah}`;
-        }
-        playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
-    }
-
+    function updatePlayerUI(surah, ayah) { if (!isPlayingFullSurah) playerInfo.textContent = `S: ${surah.asma.id.short}, A: ${ayah.number.insurah}`; playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>'; }
     function updateActiveAyahUI() {
         document.querySelectorAll('.ayah.playing').forEach(el => el.classList.remove('playing'));
-        const ayah = quranData[currentSurahNumber-1]?.ayahs[currentAyahIndex];
-        if (!ayah) return;
+        const ayah = quranData[currentSurahNumber-1]?.ayahs[currentAyahIndex]; if (!ayah) return;
         const el = document.getElementById(`ayah-${currentSurahNumber}-${ayah.number.insurah}`);
-        if(el) {
-            el.classList.add('playing');
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+        if(el) { el.classList.add('playing'); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
     }
-    
-    function togglePlayPause() {
-        if (!audio.src) {
-            playAyah(currentSurahNumber, 0, true);
-        } else if (audio.paused) {
-            audio.play();
-        } else {
-            audio.pause();
-        }
-    }
-    
+    function togglePlayPause() { if (!audio.src) playAyah(currentSurahNumber, 0, true); else if (audio.paused) audio.play(); else audio.pause(); }
     audio.onplay = () => playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
     audio.onpause = () => playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
     audio.onerror = () => playerInfo.textContent = "Gagal memuat audio.";
-    
     audio.onended = () => {
         if (isPlayingFullSurah) {
             const surah = quranData[currentSurahNumber - 1];
-            if (currentAyahIndex < surah.ayahs.length - 1) {
-                playNext(true);
-            } else {
-                isPlayingFullSurah = false;
-                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
-                playerInfo.textContent = `Selesai memutar Surah ${surah.asma.id.short}`;
-                document.querySelectorAll('.ayah.playing').forEach(el => el.classList.remove('playing'));
-            }
+            if (currentAyahIndex < surah.ayahs.length - 1) playNext(true);
+            else { isPlayingFullSurah = false; playPauseBtn.innerHTML = '<i class="fas fa-play"></i>'; playerInfo.textContent = `Selesai memutar Surah ${surah.asma.id.short}`; document.querySelectorAll('.ayah.playing').forEach(el => el.classList.remove('playing')); }
         } else {
-            if (repeatMode === 'one') {
-                playAyah(currentSurahNumber, currentAyahIndex, true);
-            } else if (repeatMode === 'all') {
-                playNext(false);
-            } else {
-                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
-            }
+            if (repeatMode === 'one') playAyah(currentSurahNumber, currentAyahIndex, true);
+            else if (repeatMode === 'all') playNext(false);
+            else playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
         }
     };
-
     function playNext(keepFullSurahMode = false) {
         if (!keepFullSurahMode) isPlayingFullSurah = false;
         const surah = quranData[currentSurahNumber - 1];
-        if (currentAyahIndex < surah.ayahs.length - 1) {
-            playAyah(currentSurahNumber, currentAyahIndex + 1);
-        } else if (repeatMode === 'all' && !isPlayingFullSurah) {
-            playAyah(currentSurahNumber, 0);
-        }
+        if (currentAyahIndex < surah.ayahs.length - 1) playAyah(currentSurahNumber, currentAyahIndex + 1);
+        else if (repeatMode === 'all' && !isPlayingFullSurah) playAyah(currentSurahNumber, 0);
     }
-
-    function playPrev() {
-        isPlayingFullSurah = false;
-        if (currentAyahIndex > 0) playAyah(currentSurahNumber, currentAyahIndex - 1);
-    }
-    
+    function playPrev() { isPlayingFullSurah = false; if (currentAyahIndex > 0) playAyah(currentSurahNumber, currentAyahIndex - 1); }
     function toggleRepeatMode() {
         repeatBtn.classList.remove('one');
-        if (repeatMode === 'none') {
-            repeatMode = 'all';
-            repeatBtn.classList.add('active');
-            repeatBtn.title = "Ulangi Semua";
-        } else if (repeatMode === 'all') {
-            repeatMode = 'one';
-            repeatBtn.classList.add('one');
-            repeatBtn.title = "Ulangi Satu";
-        } else {
-            repeatMode = 'none';
-            repeatBtn.classList.remove('active');
-            repeatBtn.title = "Mode Ulangi";
-        }
+        if (repeatMode === 'none') { repeatMode = 'all'; repeatBtn.classList.add('active'); repeatBtn.title = "Ulangi Semua"; }
+        else if (repeatMode === 'all') { repeatMode = 'one'; repeatBtn.classList.add('one'); repeatBtn.title = "Ulangi Satu"; }
+        else { repeatMode = 'none'; repeatBtn.classList.remove('active'); repeatBtn.title = "Mode Ulangi"; }
     }
 
     // === LOGIKA BOOKMARK & TEMA ===
     function toggleBookmark(surahNum, ayahNum, buttonEl) {
         const bookmarkIndex = bookmarks.findIndex(b => b.surah === surahNum && b.ayah === ayahNum);
-        if (bookmarkIndex > -1) {
-            bookmarks.splice(bookmarkIndex, 1);
-            buttonEl.classList.remove('bookmarked');
-        } else {
-            bookmarks.push({ surah: surahNum, ayah: ayahNum });
-            buttonEl.classList.add('bookmarked');
-        }
+        if (bookmarkIndex > -1) { bookmarks.splice(bookmarkIndex, 1); buttonEl.classList.remove('bookmarked'); }
+        else { bookmarks.push({ surah: surahNum, ayah: ayahNum }); buttonEl.classList.add('bookmarked'); }
         localStorage.setItem('quranBookmarks', JSON.stringify(bookmarks));
     }
-
     function initTheme() {
         const savedTheme = localStorage.getItem('theme') || 'dark';
-        if (savedTheme === 'light') {
-            document.body.classList.add('light-theme');
-            themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
-        } else {
-            document.body.classList.remove('light-theme');
-            themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
-        }
+        if (savedTheme === 'light') { document.body.classList.add('light-theme'); themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>'; }
+        else { document.body.classList.remove('light-theme'); themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i>'; }
     }
-
     function toggleTheme() {
         document.body.classList.toggle('light-theme');
-        if (document.body.classList.contains('light-theme')) {
-            localStorage.setItem('theme', 'light');
-            themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
-        } else {
-            localStorage.setItem('theme', 'dark');
-            themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
-        }
+        if (document.body.classList.contains('light-theme')) { localStorage.setItem('theme', 'light'); themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>'; }
+        else { localStorage.setItem('theme', 'dark'); themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i>'; }
     }
     
     // === EVENT LISTENERS ===
     surahListContainer.addEventListener('click', (e) => {
-        const surahItem = e.target.closest('.surah-item');
-        if (!surahItem) return;
-        const surahNum = parseInt(surahItem.dataset.surahNumber);
-        if (surahNum === currentSurahNumber) return;
-        currentSurahNumber = surahNum;
-        audio.pause();
-        currentAyahIndex = -1;
-        isPlayingFullSurah = false;
-        renderSurah(currentSurahNumber);
-        updateActiveSurahItem();
+        const surahItem = e.target.closest('.surah-item'); if (!surahItem) return;
+        const surahNum = parseInt(surahItem.dataset.surahNumber); if (surahNum === currentSurahNumber) return;
+        currentSurahNumber = surahNum; audio.pause(); currentAyahIndex = -1; isPlayingFullSurah = false;
+        renderSurah(currentSurahNumber); updateActiveSurahItem();
     });
-
     ayahContainer.addEventListener('click', (e) => {
-        const playBtn = e.target.closest('.play-ayah-btn');
-        if (playBtn) {
-            const ayahIndex = parseInt(playBtn.closest('.ayah').dataset.ayahIndex);
-            playAyah(currentSurahNumber, ayahIndex, true);
-        }
-        const bookmarkBtn = e.target.closest('.bookmark-btn');
-        if (bookmarkBtn) {
-            const ayahEl = bookmarkBtn.closest('.ayah');
-            const ayah = quranData[currentSurahNumber - 1].ayahs[parseInt(ayahEl.dataset.ayahIndex)];
-            toggleBookmark(currentSurahNumber, ayah.number.insurah, bookmarkBtn);
-        }
+        const playBtn = e.target.closest('.play-ayah-btn'); if (playBtn) { const ayahIndex = parseInt(playBtn.closest('.ayah').dataset.ayahIndex); playAyah(currentSurahNumber, ayahIndex, true); }
+        const bookmarkBtn = e.target.closest('.bookmark-btn'); if (bookmarkBtn) { const ayahEl = bookmarkBtn.closest('.ayah'); const ayah = quranData[currentSurahNumber - 1].ayahs[parseInt(ayahEl.dataset.ayahIndex)]; toggleBookmark(currentSurahNumber, ayah.number.insurah, bookmarkBtn); }
     });
-
     playPauseBtn.addEventListener('click', togglePlayPause);
     nextBtn.addEventListener('click', () => playNext(false));
     prevBtn.addEventListener('click', playPrev);
     repeatBtn.addEventListener('click', toggleRepeatMode);
     themeToggleBtn.addEventListener('click', toggleTheme);
-    
     imamSelect.addEventListener('change', (e) => {
-        selectedImamId = e.target.value;
-        localStorage.setItem('selectedImam', selectedImamId);
-        if (!audio.paused) {
-            playAyah(currentSurahNumber, currentAyahIndex, !isPlayingFullSurah);
-        }
+        selectedImamId = e.target.value; localStorage.setItem('selectedImam', selectedImamId);
+        if (!audio.paused) playAyah(currentSurahNumber, currentAyahIndex, !isPlayingFullSurah);
     });
-    
     function updateActiveSurahItem() {
         document.querySelectorAll('.surah-item.active').forEach(item => item.classList.remove('active'));
         const activeItem = document.querySelector(`.surah-item[data-surah-number="${currentSurahNumber}"]`);
-        if (activeItem) {
-            activeItem.classList.add('active');
-            activeItem.scrollIntoView({ block: 'center', behavior: 'smooth' });
-        }
+        if (activeItem) { activeItem.classList.add('active'); activeItem.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
     }
 
     // === JALANKAN APLIKASI ===
