@@ -8,15 +8,15 @@
     <!-- Google Fonts untuk Tipografi -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Poppins:wght@300;400;600&family=Scheherazade+New:wght@700&display=swap" rel="stylesheet">
     <!-- Font Awesome untuk Ikon -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
 </head>
 <body>
 
     <div id="loading-overlay">
         <div class="loader"></div>
-        <p>Memuat Data Al-Qur'an...</p>
+        <p>Memuat Data Al-Qur'an & Qari...</p>
     </div>
 
     <div class="app-container">
@@ -24,6 +24,7 @@
         <aside class="sidebar">
             <div class="sidebar-header">
                 <h2>Daftar Surah</h2>
+                <button id="theme-toggle-btn" class="icon-btn" title="Ganti Tema"><i class="fas fa-sun"></i></button>
             </div>
             <div class="surah-list-container" id="surah-list">
                 <!-- Daftar Surah akan dimuat oleh JavaScript di sini -->

@@ -4,43 +4,43 @@ document.addEventListener('DOMContentLoaded', () => {
     const surahListContainer = document.getElementById('surah-list');
     const surahHeader = document.getElementById('surah-header');
     const ayahContainer = document.getElementById('ayah-container');
-    const audioPlayer = document.getElementById('audio-player');
     const playPauseBtn = document.getElementById('play-pause-btn');
     const nextBtn = document.getElementById('next-btn');
     const prevBtn = document.getElementById('prev-btn');
     const repeatBtn = document.getElementById('repeat-btn');
     const imamSelect = document.getElementById('imam-select');
     const playerInfo = document.getElementById('player-info');
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
 
     // === STATE APLIKASI ===
-    let quranData = [];
-    let imamData = [];
+    let quranData = [], imamData = [];
     let bookmarks = JSON.parse(localStorage.getItem('quranBookmarks')) || [];
-    let currentSurahNumber = 1;
-    let currentAyahIndex = -1;
-    let selectedImamId = 'alafasy'; // Default Imam
+    let currentSurahNumber = 1, currentAyahIndex = -1;
+    let selectedImamId = localStorage.getItem('selectedImam') || 'alafasy';
     let repeatMode = 'none'; // 'none', 'one', 'all'
     const audio = new Audio();
 
-    // === INISIALISASI APLIKASI ===
+    // === FUNGSI UTAMA & INISIALISASI ===
     async function initializeApp() {
         try {
+            // Muat data Quran dan Imam secara paralel
             const [quranResponse, imamResponse] = await Promise.all([
                 fetch('https://raw.githubusercontent.com/urangbandung/quran/main/data/quran.json'),
                 fetch('https://raw.githubusercontent.com/urangbandung/quran/main/data/imam.json')
             ]);
             
-            if (!quranResponse.ok || !imamResponse.ok) {
-                throw new Error('Gagal memuat data.');
-            }
-
+            if (!quranResponse.ok || !imamResponse.ok) throw new Error('Gagal memuat data sumber.');
+            
             quranData = await quranResponse.json();
             imamData = await imamResponse.json();
             
+            // Render komponen aplikasi
             renderImamList();
             renderSurahList();
             renderSurah(currentSurahNumber);
+            initTheme();
 
+            // Sembunyikan loading overlay
             loadingOverlay.style.opacity = '0';
             setTimeout(() => loadingOverlay.style.display = 'none', 500);
 
@@ -49,15 +49,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // === FUNGSI RENDER ===
+    // === FUNGSI PEWARNAAN TAJWID (SIMULASI) ===
+    function applyTajwidColoring(text) {
+        // PENTING: Ini hanya simulasi visual, bukan analisis tajwid yang akurat.
+        let coloredText = text;
+        // 1. Lafaz Allah
+        coloredText = coloredText.replace(/ٱللَّهِ/g, '<span class="tajwid-lafsalah">ٱللَّهِ</span>');
+        // 2. Ghunnah pada Nun dan Mim Tasydid (مّ / نّ)
+        coloredText = coloredText.replace(/([ن|م]\u0651)/g, '<span class="tajwid-ghunnah">$1</span>');
+        // 3. Mad Wajib/Jaiz (tanda alis ~ )
+        coloredText = coloredText.replace(/([^\s]*\u0653[^\s]*)/g, '<span class="tajwid-madd">$1</span>');
+        return coloredText;
+    }
+
+    // === FUNGSI RENDER TAMPILAN ===
     function renderImamList() {
         imamData.forEach(imam => {
             const option = document.createElement('option');
             option.value = imam.id;
             option.textContent = imam.name;
-            if (imam.id === selectedImamId) {
-                option.selected = true;
-            }
+            if (imam.id === selectedImamId) option.selected = true;
             imamSelect.appendChild(option);
         });
     }
@@ -68,16 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const surahItem = document.createElement('div');
             surahItem.className = 'surah-item';
             surahItem.dataset.surahNumber = surah.number;
-            if (surah.number === currentSurahNumber) {
-                surahItem.classList.add('active');
-            }
-            surahItem.innerHTML = `
-                <div class="surah-number">${surah.number}</div>
-                <div class="surah-info">
-                    <strong>${surah.asma.id.short}</strong>
-                    <small>${surah.asma.translation.id} - ${surah.ayahCount} ayat</small>
-                </div>
-            `;
+            if (surah.number === currentSurahNumber) surahItem.classList.add('active');
+            surahItem.innerHTML = `<div class="surah-number">${surah.number}</div><div class="surah-info"><strong>${surah.asma.id.short}</strong><small>${surah.asma.translation.id} - ${surah.ayahCount} ayat</small></div>`;
             surahItem.addEventListener('click', () => {
                 currentSurahNumber = surah.number;
                 renderSurah(currentSurahNumber);
@@ -91,16 +94,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const surah = quranData[surahNumber - 1];
         if (!surah) return;
         
-        const bismillah = surah.preBismillah ? `<img src="https://i.imgur.com/2A215sN.png" alt="Bismillah" style="display:block; margin: 20px auto; width: 300px;"/>` : '';
+        // Tampilkan Bismillah sebagai teks, bukan gambar
+        const bismillahHtml = surah.preBismillah ? `<p class="bismillah-text">${surah.preBismillah.text.ar}</p>` : '';
 
-        surahHeader.innerHTML = `
-            <h1>${surah.asma.ar.short}</h1>
-            <p>${surah.asma.id.long} • ${surah.ayahCount} Ayat</p>
-        `;
+        surahHeader.innerHTML = `<h1>${surah.asma.ar.short}</h1><p>${surah.asma.id.long} • ${surah.ayahCount} Ayat</p>`;
+        ayahContainer.innerHTML = bismillahHtml;
 
-        ayahContainer.innerHTML = bismillah;
         surah.ayahs.forEach((ayah, index) => {
             const isBookmarked = bookmarks.some(b => b.surah === surah.number && b.ayah === ayah.number.insurah);
+            const coloredArabicText = applyTajwidColoring(ayah.text.ar);
             const ayahEl = document.createElement('div');
             ayahEl.className = 'ayah';
             ayahEl.id = `ayah-${surah.number}-${ayah.number.insurah}`;
@@ -113,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <button class="bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" title="Bookmark"><i class="fas fa-bookmark"></i></button>
                     </div>
                 </div>
-                <p class="arabic-text">${ayah.text.ar}</p>
+                <p class="arabic-text">${coloredArabicText}</p>
                 <p class="translation-text">${ayah.translation.id}</p>
             `;
             ayahContainer.appendChild(ayahEl);
@@ -125,13 +127,18 @@ document.addEventListener('DOMContentLoaded', () => {
         currentSurahNumber = surahNum;
         currentAyahIndex = ayahIndex;
         const surah = quranData[surahNum - 1];
+        if (!surah) return;
         const ayah = surah.ayahs[ayahIndex];
-        
+        if (!ayah) return;
+
         const imam = imamData.find(i => i.id === selectedImamId);
-        const audioUrl = `${imam.url}/${String(surah.number).padStart(3,'0')}${String(ayah.number.insurah).padStart(3,'0')}.mp3`;
+        if (!imam) return;
+
+        // URL audio dari file imam.json digabungkan dengan nomor surah dan ayat
+        const audioUrl = `${imam.url}/${String(surah.number).padStart(3, '0')}${String(ayah.number.insurah).padStart(3, '0')}.mp3`;
         
         audio.src = audioUrl;
-        audio.play();
+        audio.play().catch(e => console.error("Audio playback error:", e));
 
         updatePlayerUI(surah, ayah);
         updateActiveAyahUI();
@@ -145,6 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateActiveAyahUI() {
         document.querySelectorAll('.ayah.playing').forEach(el => el.classList.remove('playing'));
         const ayah = quranData[currentSurahNumber-1].ayahs[currentAyahIndex];
+        if (!ayah) return;
         const el = document.getElementById(`ayah-${currentSurahNumber}-${ayah.number.insurah}`);
         if(el) {
             el.classList.add('playing');
@@ -153,19 +161,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function togglePlayPause() {
-        if(audio.paused) {
-            if (currentAyahIndex === -1) { // Jika belum ada yg di play, play dari ayat pertama
-                playAyah(currentSurahNumber, 0);
-            } else {
-                audio.play();
-            }
-        } else {
+        if (audio.src && !audio.paused) {
             audio.pause();
+        } else if (audio.src && audio.paused) {
+            audio.play();
+        } else if (currentAyahIndex === -1) {
+            playAyah(currentSurahNumber, 0);
         }
     }
-
+    
     audio.onplay = () => playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
     audio.onpause = () => playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+    audio.onerror = () => playerInfo.textContent = "Gagal memuat audio.";
     
     audio.onended = () => {
         if (repeatMode === 'one') {
@@ -181,26 +188,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const surah = quranData[currentSurahNumber - 1];
         if (currentAyahIndex < surah.ayahs.length - 1) {
             playAyah(currentSurahNumber, currentAyahIndex + 1);
-        } else if (repeatMode === 'all') { // jika sudah di akhir surah dan mode repeat all
-            playAyah(currentSurahNumber, 0); // kembali ke ayat 1
+        } else if (repeatMode === 'all') {
+            playAyah(currentSurahNumber, 0);
         }
     }
 
     function playPrev() {
-        if (currentAyahIndex > 0) {
-            playAyah(currentSurahNumber, currentAyahIndex - 1);
-        }
+        if (currentAyahIndex > 0) playAyah(currentSurahNumber, currentAyahIndex - 1);
     }
     
     function toggleRepeatMode() {
-        repeatBtn.classList.remove('one'); // hapus class 'one' dulu
+        repeatBtn.classList.remove('one');
         if (repeatMode === 'none') {
             repeatMode = 'all';
             repeatBtn.classList.add('active');
             repeatBtn.title = "Ulangi Semua";
         } else if (repeatMode === 'all') {
             repeatMode = 'one';
-            repeatBtn.classList.add('one'); // tambahkan class 'one'
+            repeatBtn.classList.add('one');
             repeatBtn.title = "Ulangi Satu";
         } else {
             repeatMode = 'none';
@@ -209,32 +214,53 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // === LOGIKA BOOKMARK ===
-    function toggleBookmark(surahNum, ayahNum) {
+    // === LOGIKA BOOKMARK & TEMA ===
+    function toggleBookmark(surahNum, ayahNum, buttonEl) {
         const bookmarkIndex = bookmarks.findIndex(b => b.surah === surahNum && b.ayah === ayahNum);
         if (bookmarkIndex > -1) {
             bookmarks.splice(bookmarkIndex, 1);
+            buttonEl.classList.remove('bookmarked');
         } else {
             bookmarks.push({ surah: surahNum, ayah: ayahNum });
+            buttonEl.classList.add('bookmarked');
         }
         localStorage.setItem('quranBookmarks', JSON.stringify(bookmarks));
+    }
+
+    function initTheme() {
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        if (savedTheme === 'light') {
+            document.body.classList.add('light-theme');
+            themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
+        } else {
+            document.body.classList.remove('light-theme');
+            themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
+        }
+    }
+
+    function toggleTheme() {
+        document.body.classList.toggle('light-theme');
+        if (document.body.classList.contains('light-theme')) {
+            localStorage.setItem('theme', 'light');
+            themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
+        } else {
+            localStorage.setItem('theme', 'dark');
+            themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
+        }
     }
     
     // === EVENT LISTENERS ===
     ayahContainer.addEventListener('click', (e) => {
         const playBtn = e.target.closest('.play-ayah-btn');
         const bookmarkBtn = e.target.closest('.bookmark-btn');
-        const ayahEl = e.target.closest('.ayah');
-        
-        if (playBtn && ayahEl) {
-            const ayahIndex = parseInt(ayahEl.dataset.ayahIndex);
+        if (playBtn) {
+            const ayahIndex = parseInt(playBtn.closest('.ayah').dataset.ayahIndex);
             playAyah(currentSurahNumber, ayahIndex);
         }
-        
-        if (bookmarkBtn && ayahEl) {
+        if (bookmarkBtn) {
+            const ayahEl = bookmarkBtn.closest('.ayah');
             const ayah = quranData[currentSurahNumber - 1].ayahs[parseInt(ayahEl.dataset.ayahIndex)];
-            toggleBookmark(currentSurahNumber, ayah.number.insurah);
-            bookmarkBtn.classList.toggle('bookmarked');
+            toggleBookmark(currentSurahNumber, ayah.number.insurah, bookmarkBtn);
         }
     });
 
@@ -242,11 +268,11 @@ document.addEventListener('DOMContentLoaded', () => {
     nextBtn.addEventListener('click', playNext);
     prevBtn.addEventListener('click', playPrev);
     repeatBtn.addEventListener('click', toggleRepeatMode);
+    themeToggleBtn.addEventListener('click', toggleTheme);
     imamSelect.addEventListener('change', (e) => {
         selectedImamId = e.target.value;
-        if (!audio.paused) { // Jika sedang play, langsung putar ulang dengan imam baru
-            playAyah(currentSurahNumber, currentAyahIndex);
-        }
+        localStorage.setItem('selectedImam', selectedImamId);
+        if (!audio.paused) playAyah(currentSurahNumber, currentAyahIndex);
     });
     
     function updateActiveSurahItem() {
