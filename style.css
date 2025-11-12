@@ -162,10 +162,12 @@ body {
     transition: color 0.2s; /* Hanya transisi warna, tanpa scale untuk flat */
     border: none; /* Tanpa border */
     opacity: 1; /* Full opacity, no semi-transparent */
+    line-height: 1; /* Stabilkan vertikal alignment */
+    vertical-align: middle; /* Pastikan tidak shifting posisi */
 }
 #repeat-btn:hover { 
     color: var(--accent-gold); 
-    transform: none; /* Hilangkan getar/scale */
+    transform: none; /* No transform, no movement */
 }
 #repeat-btn.active { color: var(--accent-gold); } /* Warna gold untuk repeat all */
 #repeat-btn.one { color: var(--accent-blue); } /* Warna blue untuk repeat one */
