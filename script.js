@@ -229,6 +229,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             audio.pause();
             isPlayingFullSurah = false;
+            currentPlayingAyahEl = null; // Reset ayat playing saat stop all
+            updateAyahButtonIcons(); // Update ikon ayat kembali ke play
             updatePlayFullButton();
         }
     }

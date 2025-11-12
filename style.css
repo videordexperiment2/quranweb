@@ -184,7 +184,16 @@ body {
     color: var(--accent-blue); 
 }
 
-#play-full-surah-btn { position: absolute; top: 50%; right: 20px; transform: translateY(-50%); font-size: calc(20px + 0.5vw); }
+#play-full-surah-btn { 
+    position: absolute; 
+    top: 50%; 
+    right: 20px; 
+    transform: translateY(-50%); 
+    font-size: calc(20px + 0.5vw); 
+    line-height: 1; /* Sejajarkan dengan repeat */
+    vertical-align: middle;
+    height: 30px; /* Fixed height untuk sejajar */
+}
 
 .surah-header h1 { font-family: 'Scheherazade New', serif; font-size: calc(2.5rem + 1vw); color: var(--accent-gold); margin: 5px 0; } /* Kurangi margin untuk lebih atas */
 .surah-header p { color: var(--text-secondary); font-style: italic; font-size: calc(12px + 0.5vw); margin: 0; } /* Hilangkan margin bawah */
