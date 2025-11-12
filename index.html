@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Quran Digital Profesional</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -21,11 +21,17 @@
     </div>
 
     <div class="app-container" id="app-container">
+        <!-- Backdrop untuk mobile sidebar -->
+        <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
         <!-- Sidebar untuk Daftar Surah dan Pengaturan -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <h2>Daftar Surah</h2>
-                <button id="theme-toggle-btn" class="icon-btn" title="Ganti Tema"><i class="fas fa-sun"></i></button>
+                <div class="sidebar-actions">
+                    <button id="sidebar-hide-btn" class="icon-btn" title="Sembunyikan Daftar Surah"><i class="fas fa-eye-slash"></i></button>
+                    <button id="theme-toggle-btn" class="icon-btn" title="Ganti Tema"><i class="fas fa-sun"></i></button>
+                </div>
             </div>
             <div class="surah-list-container" id="surah-list">
                 <!-- Daftar Surah akan dimuat oleh JavaScript di sini -->

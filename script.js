@@ -13,6 +13,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // === ELEMEN DOM ===
     const loadingOverlay = document.getElementById('loading-overlay');
     const appContainer = document.getElementById('app-container');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+    const sidebarHideBtn = document.getElementById('sidebar-hide-btn');
     const surahListContainer = document.getElementById('surah-list');
     const surahHeader = document.getElementById('surah-header');
     const ayahContainer = document.getElementById('ayah-container');
@@ -45,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderSurah(currentSurahNumber);
             initTheme();
             initSidebar();
+            initOrientationDefaults();
             loadingOverlay.style.opacity = '0';
             setTimeout(() => loadingOverlay.style.display = 'none', 500);
         } catch (error) {
@@ -124,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <p>${surah.asma.id.long} • ${surah.ayahCount} Ayat</p>
         `;
         document.getElementById('play-full-surah-btn').addEventListener('click', playFullSurah);
-        document.getElementById('sidebar-toggle-btn').addEventListener('click', toggleSidebar);
+        document.getElementById('sidebar-toggle-btn').addEventListener('click', toggleSidebarOnMobile);
         ayahContainer.innerHTML = bismillahHtml;
         surah.ayahs.forEach((ayah, index) => {
             const isBookmarked = bookmarks.some(b => b.surah === surah.number && b.ayah === ayah.number.insurah);
@@ -159,10 +163,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // === LOGIKA RIWAYAT, SIDEBAR, TEMA & BOOKMARK ===
+    // === RIWAYAT, SIDEBAR, TEMA, BOOKMARK ===
     function saveReadingHistory(surahNum, ayahNum) { readingHistory[surahNum] = ayahNum; localStorage.setItem('quranReadingHistory', JSON.stringify(readingHistory)); }
     function toggleSidebar() { appContainer.classList.toggle('sidebar-collapsed'); localStorage.setItem('sidebarState', appContainer.classList.contains('sidebar-collapsed') ? 'collapsed' : 'expanded'); }
+    function toggleSidebarOnMobile() { appContainer.classList.toggle('sidebar-open'); }
     function initSidebar() { if (localStorage.getItem('sidebarState') === 'collapsed') appContainer.classList.add('sidebar-collapsed'); }
+    function initOrientationDefaults() {
+        // Di desktop: tidak melakukan apa-apa (sesuai preferensi user).
+        // Di mobile: Default orientasi potrait = tersembunyi; landscape = tampil.
+        if (window.matchMedia('(max-width: 768px)').matches) {
+            if (window.matchMedia('(orientation: landscape)').matches) {
+                appContainer.classList.add('sidebar-open');
+            } else {
+                appContainer.classList.remove('sidebar-open');
+            }
+        }
+    }
     function toggleBookmark(surahNum, ayahNum, buttonEl) {
         const bookmarkIndex = bookmarks.findIndex(b => b.surah === surahNum && b.ayah === ayahNum);
         if (bookmarkIndex > -1) { bookmarks.splice(bookmarkIndex, 1); buttonEl.classList.remove('bookmarked'); }
@@ -178,8 +194,8 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
         initTheme();
     }
-    
-    // === LOGIKA AUDIO PLAYER ===
+
+    // === AUDIO PLAYER ===
     function playFullSurah() {
         audio.pause(); isPlayingFullSurah = true;
         playerInfo.textContent = `Memutar Surah: ${quranData[currentSurahNumber - 1].asma.id.short}`;
@@ -246,6 +262,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const surahNum = parseInt(surahItem.dataset.surahNumber); if (surahNum === currentSurahNumber) return;
         currentSurahNumber = surahNum; audio.pause(); currentAyahIndex = -1; isPlayingFullSurah = false;
         renderSurah(currentSurahNumber); updateActiveSurahItem();
+        // Tutup sidebar di mobile setelah memilih
+        if (window.matchMedia('(max-width: 768px)').matches) appContainer.classList.remove('sidebar-open');
     });
     ayahContainer.addEventListener('click', (e) => {
         const playBtn = e.target.closest('.play-ayah-btn'); if (playBtn) { const ayahIndex = parseInt(playBtn.closest('.ayah').dataset.ayahIndex); playAyah(currentSurahNumber, ayahIndex, true); }
@@ -256,15 +274,51 @@ document.addEventListener('DOMContentLoaded', () => {
     prevBtn.addEventListener('click', playPrev);
     repeatBtn.addEventListener('click', toggleRepeatMode);
     themeToggleBtn.addEventListener('click', toggleTheme);
+
+    // Tombol eye di header sidebar (sembunyikan daftar Surah)
+    sidebarHideBtn.addEventListener('click', () => {
+        if (window.matchMedia('(max-width: 768px)').matches) {
+            appContainer.classList.remove('sidebar-open');
+        } else {
+            toggleSidebar(); // desktop
+        }
+    });
+
+    // Backdrop klik untuk menutup sidebar di mobile
+    sidebarBackdrop.addEventListener('click', () => {
+        if (window.matchMedia('(max-width: 768px)').matches) {
+            appContainer.classList.remove('sidebar-open');
+        }
+    });
+
+    // Ikon mata: saat sidebar disembunyikan di desktop, tampilkan eye (unhide)
+    function syncSidebarEye() {
+        const isCollapsedDesktop = appContainer.classList.contains('sidebar-collapsed') && window.matchMedia('(min-width: 769px)').matches;
+        sidebarHideBtn.innerHTML = isCollapsedDesktop ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+        sidebarHideBtn.title = isCollapsedDesktop ? "Tampilkan Daftar Surah" : "Sembunyikan Daftar Surah";
+    }
+
     imamSelect.addEventListener('change', (e) => {
         selectedImamId = e.target.value; localStorage.setItem('selectedImam', selectedImamId);
         if (!audio.paused) playAyah(currentSurahNumber, currentAyahIndex, !isPlayingFullSurah);
     });
+
     function updateActiveSurahItem() {
         document.querySelectorAll('.surah-item.active').forEach(item => item.classList.remove('active'));
         const activeItem = document.querySelector(`.surah-item[data-surah-number="${currentSurahNumber}"]`);
         if (activeItem) { activeItem.classList.add('active'); activeItem.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+        syncSidebarEye();
     }
+
+    // Sinkronkan ikon mata saat window resize
+    window.addEventListener('resize', () => {
+        initOrientationDefaults();
+        syncSidebarEye();
+    });
+
+    // Sinkronkan ikon mata saat perubahan class sidebar
+    const observer = new MutationObserver(syncSidebarEye);
+    observer.observe(appContainer, { attributes: true, attributeFilter: ['class'] });
 
     // === JALANKAN APLIKASI ===
     initializeApp();
