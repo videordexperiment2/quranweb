@@ -48,9 +48,17 @@ document.addEventListener('DOMContentLoaded', () => {
             initSidebar();
             loadingOverlay.style.opacity = '0';
             setTimeout(() => loadingOverlay.style.display = 'none', 500);
+            adjustLayout(); // Init layout adjustment
         } catch (error) {
             loadingOverlay.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
         }
+    }
+
+    // === FUNGSI ADJUST LAYOUT UNTUK MOBILE RESIZE (ADDRESS BAR) ===
+    function adjustLayout() {
+        const vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+        appContainer.style.height = `calc(var(--vh, 1vh) * 100 - 60px)`; // Adjust height dinamis
     }
 
     // === FUNGSI PEWARNAAN TAJWID (VERSI CERDAS) ===
@@ -327,6 +335,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const activeItem = document.querySelector(`.surah-item[data-surah-number="${currentSurahNumber}"]`);
         if (activeItem) { activeItem.classList.add('active'); activeItem.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
     }
+
+    // Event listener untuk resize (address bar hide/show)
+    window.addEventListener('resize', adjustLayout);
+    window.addEventListener('orientationchange', adjustLayout); // Untuk portrait/landscape
 
     // === JALANKAN APLIKASI ===
     initializeApp();
