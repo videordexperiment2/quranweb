@@ -102,7 +102,16 @@ body {
 
 /* Konten Utama */
 .main-content { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
-.surah-header { padding: 20px; text-align: center; border-bottom: 1px solid var(--border-color); background-color: var(--bg-light); position: relative; }
+.surah-header { 
+    padding: 10px 20px; /* Kurangi padding untuk proporsional */
+    text-align: center; 
+    border-bottom: 1px solid var(--border-color); 
+    background-color: var(--bg-light); 
+    position: sticky; /* Sticky agar tetap di atas saat scroll */
+    top: 0; 
+    z-index: 100; /* Di atas konten scroll */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Shadow ringan untuk rapih */
+}
 
 /* === GAYA BARU: TOMBOL HIDE/UNHIDE === */
 #sidebar-hide-btn, #sidebar-unhide-btn { 
@@ -123,8 +132,8 @@ body {
 
 #play-full-surah-btn { position: absolute; top: 50%; right: 20px; transform: translateY(-50%); font-size: calc(20px + 0.5vw); }
 
-.surah-header h1 { font-family: 'Scheherazade New', serif; font-size: calc(2.5rem + 1vw); color: var(--accent-gold); }
-.surah-header p { color: var(--text-secondary); font-style: italic; font-size: calc(12px + 0.5vw); }
+.surah-header h1 { font-family: 'Scheherazade New', serif; font-size: calc(2.5rem + 1vw); color: var(--accent-gold); margin: 5px 0; } /* Kurangi margin untuk lebih atas */
+.surah-header p { color: var(--text-secondary); font-style: italic; font-size: calc(12px + 0.5vw); margin: 0; } /* Hilangkan margin bawah */
 
 .ayah-list-container { overflow-y: auto; padding: 20px; max-height: calc(100vh - 200px - env(safe-area-inset-top)); } /* Adaptif dengan safe area */
 .bismillah-text { font-family: 'Amiri Quran', serif; font-size: calc(2rem + 1vw); text-align: center; margin-bottom: 30px; color: var(--text-secondary); }
@@ -171,7 +180,7 @@ body {
         margin-left: 0; 
         padding-top: 60px; /* Padding untuk address bar Chrome Android */
     }
-    .surah-header { padding-top: 60px; } /* Padding ekstra untuk header agar tidak terpotong */
+    .surah-header { padding-top: 10px; padding-bottom: 10px; } /* Padding lebih ringkas untuk sticky */
     .audio-player { flex-wrap: wrap; height: auto; padding: 10px; }
     .player-info { width: 100%; order: -1; text-align: left; margin-bottom: 10px; }
     .player-controls, .player-settings { width: 100%; justify-content: space-between; }
@@ -183,7 +192,7 @@ body {
     body { font-size: calc(12px + 0.4vw); } /* Huruf lebih kecil untuk vertikal */
     .sidebar { width: 100%; padding: 10px; } /* Full width, padding ringkas */
     .arabic-text { font-size: calc(1.8rem + 0.8vw); line-height: 2.5; }
-    .surah-header h1 { font-size: calc(2rem + 0.8vw); }
+    .surah-header h1 { font-size: calc(2rem + 0.8vw); margin-top: 5px; } /* Adjust margin agar judul lebih atas */
     .ayah { padding: 15px 10px; } /* Padding lebih kecil */
     .ayah-list-container { padding: 10px; max-height: calc(100vh - 150px - 60px); } /* Adjust untuk address bar */
 }

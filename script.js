@@ -179,10 +179,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const el = document.getElementById(`ayah-${currentSurahNumber}-${ayahNumInSurah}`);
         if (el) {
             el.classList.add('active');
-            // Scroll ayat ke paling atas viewport dengan smooth
+            // Scroll ayat ke paling atas viewport dengan smooth, tepat di bawah sticky header
             el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            // Penyesuaian manual untuk memastikan tepat di atas (offset untuk padding/header)
-            ayahContainer.scrollTop = el.offsetTop - 20; // Adjust offset jika perlu
+            // Penyesuaian manual untuk tepat di bawah header (offset = height header)
+            const headerHeight = surahHeader.offsetHeight || 60; // Default 60px jika tidak terdeteksi
+            ayahContainer.scrollTop = el.offsetTop - headerHeight - 10; // Offset ekstra untuk rapih
         }
     }
 
