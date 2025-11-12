@@ -83,7 +83,16 @@ body {
 .surah-header { padding: 20px; text-align: center; border-bottom: 1px solid var(--border-color); background-color: var(--bg-light); position: relative; }
 
 /* === GAYA BARU: TOMBOL HAMBURGER & PLAY SURAH === */
-#sidebar-toggle-btn { position: absolute; top: 50%; left: 20px; transform: translateY(-50%); font-size: calc(18px + 0.5vw); }
+#sidebar-toggle-btn { 
+    position: absolute; 
+    top: 50%; 
+    left: 10px; /* Sedikit lebih ke kiri untuk floating feel */
+    transform: translateY(-50%); 
+    font-size: calc(18px + 0.5vw); 
+    transition: opacity 0.3s ease; /* Transisi halus */
+    opacity: 0; /* Default hidden */
+}
+#sidebar-toggle-btn:hover { opacity: 1; color: var(--accent-gold); }
 #play-full-surah-btn { position: absolute; top: 50%; right: 20px; transform: translateY(-50%); font-size: calc(20px + 0.5vw); }
 /* ================================================= */
 
@@ -130,11 +139,18 @@ body {
     .sidebar { position: fixed; height: 100vh; z-index: 600; width: 100%; } /* Full width di mobile */
     .app-container.sidebar-collapsed .main-content { margin-left: 0; }
     .main-content { transition: margin-left 0.3s ease; margin-left: 0; } /* Adjust margin */
-    #sidebar-toggle-btn { display: block; }
     .audio-player { flex-wrap: wrap; height: auto; padding: 10px; }
     .player-info { width: 100%; order: -1; text-align: left; margin-bottom: 10px; }
     .player-controls, .player-settings { width: 100%; justify-content: space-between; }
     .arabic-text { font-size: calc(1.8rem + 1vw); }
+
+    /* Perbaikan: Tombol toggle hanya tampil saat sidebar collapsed (hidden) */
+    #sidebar-toggle-btn { display: none; opacity: 0; }
+    .app-container.sidebar-collapsed #sidebar-toggle-btn { 
+        display: block; 
+        opacity: 1; 
+        z-index: 700; /* Di atas konten */
+    }
 }
 
 /* Portrait Mode (Vertikal, biasa di HP) */

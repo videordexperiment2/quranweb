@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!surah) return;
         const bismillahHtml = (surah.preBismillah && typeof surah.preBismillah === 'object' && surah.preBismillah.text) ? `<p class="bismillah-text">${surah.preBismillah.text.ar}</p>` : '';
         surahHeader.innerHTML = `
-            <button id="sidebar-toggle-btn" class="icon-btn" title="Tampilkan/Sembunyikan Daftar Surah"><i class="fas fa-chevron-left"></i></button> <!-- Default ikon hide -->
+            <button id="sidebar-toggle-btn" class="icon-btn" title="Tampilkan Daftar Surah"><i class="fas fa-chevron-right"></i></button> <!-- Ikon unhide fixed -->
             <button id="play-full-surah-btn" class="icon-btn" title="Play Seluruh Surah"><i class="fas fa-play-circle"></i></button>
             <h1>${surah.asma.ar.short}</h1>
             <p>${surah.asma.id.long} • ${surah.ayahCount} Ayat</p>
@@ -157,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(() => targetEl.classList.remove('playing'), 2000);
             }, 100);
         }
-        updateToggleIcon(); // Update ikon setelah render
+        updateToggleButtonVisibility(); // Update visibility setelah render
     }
 
     // === LOGIKA RIWAYAT, SIDEBAR, TEMA & BOOKMARK ===
@@ -165,21 +165,22 @@ document.addEventListener('DOMContentLoaded', () => {
     function toggleSidebar() { 
         appContainer.classList.toggle('sidebar-collapsed'); 
         localStorage.setItem('sidebarState', appContainer.classList.contains('sidebar-collapsed') ? 'collapsed' : 'expanded'); 
-        updateToggleIcon(); // Update ikon setelah toggle
+        updateToggleButtonVisibility(); // Update visibility setelah toggle
     }
-    function updateToggleIcon() {
+    function updateToggleButtonVisibility() {
         const toggleBtn = document.getElementById('sidebar-toggle-btn');
         if (appContainer.classList.contains('sidebar-collapsed')) {
-            toggleBtn.innerHTML = '<i class="fas fa-chevron-right"></i>'; // Unhide (>>)
+            toggleBtn.style.display = 'block'; // Tampilkan untuk unhide
+            toggleBtn.style.opacity = '1';
             toggleBtn.title = 'Tampilkan Daftar Surah';
         } else {
-            toggleBtn.innerHTML = '<i class="fas fa-chevron-left"></i>'; // Hide (<<)
-            toggleBtn.title = 'Sembunyikan Daftar Surah';
+            toggleBtn.style.display = 'none'; // Sembunyikan saat expanded
+            toggleBtn.style.opacity = '0';
         }
     }
     function initSidebar() { 
         if (localStorage.getItem('sidebarState') === 'collapsed') appContainer.classList.add('sidebar-collapsed'); 
-        updateToggleIcon(); // Init ikon
+        updateToggleButtonVisibility(); // Init visibility
     }
     function toggleBookmark(surahNum, ayahNum, buttonEl) {
         const bookmarkIndex = bookmarks.findIndex(b => b.surah === surahNum && b.ayah === ayahNum);
