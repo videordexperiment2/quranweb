@@ -163,7 +163,10 @@ body {
     border: none; /* Tanpa border */
     opacity: 1; /* Full opacity, no semi-transparent */
 }
-#repeat-btn:hover { color: var(--accent-gold); transform: none; } /* No scale, only color change for flat */
+#repeat-btn:hover { 
+    color: var(--accent-gold); 
+    transform: none; /* Hilangkan getar/scale */
+}
 #repeat-btn.active { color: var(--accent-gold); } /* Warna gold untuk repeat all */
 #repeat-btn.one { color: var(--accent-blue); } /* Warna blue untuk repeat one */
 
