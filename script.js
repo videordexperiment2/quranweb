@@ -117,6 +117,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderSurah(surahNumber) {
         const surah = quranData[surahNumber - 1];
         if (!surah) return;
+        // Default bookmark ke ayat 1 jika belum ada
+        if (!readingHistory[surahNumber]) {
+            readingHistory[surahNumber] = 1;
+            localStorage.setItem('quranReadingHistory', JSON.stringify(readingHistory));
+        }
         const bismillahHtml = (surah.preBismillah && typeof surah.preBismillah === 'object' && surah.preBismillah.text) ? `<p class="bismillah-text">${surah.preBismillah.text.ar}</p>` : '';
         surahHeader.innerHTML = `
             <button id="sidebar-unhide-btn" class="icon-btn" title="Tampilkan Daftar Surah"><i class="fas fa-eye"></i></button> <!-- Tombol unhide -->
@@ -149,20 +154,31 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             ayahContainer.appendChild(ayahEl);
         });
+        // Scroll ke bookmark aktif dan tandai sebagai active
         const lastReadAyah = readingHistory[surahNumber];
-        if (lastReadAyah) {
-            const targetEl = document.getElementById(`ayah-${surahNumber}-${lastReadAyah}`);
-            if (targetEl) setTimeout(() => {
+        const targetEl = document.getElementById(`ayah-${surahNumber}-${lastReadAyah}`);
+        if (targetEl) {
+            setTimeout(() => {
                 targetEl.scrollIntoView({ behavior: 'auto', block: 'start' });
-                targetEl.classList.add('playing');
-                setTimeout(() => targetEl.classList.remove('playing'), 2000);
+                updateActiveAyahUI(lastReadAyah); // Tandai sebagai active
             }, 100);
         }
         updateToggleButtons(); // Update visibility tombol
     }
 
+    // === FUNGSI UNTUK UPDATE ACTIVE AYAH (BOOKMARK) ===
+    function updateActiveAyahUI(ayahNumInSurah) {
+        document.querySelectorAll('.ayah.active').forEach(el => el.classList.remove('active'));
+        const el = document.getElementById(`ayah-${currentSurahNumber}-${ayahNumInSurah}`);
+        if (el) el.classList.add('active');
+    }
+
     // === LOGIKA RIWAYAT, SIDEBAR, TEMA & BOOKMARK ===
-    function saveReadingHistory(surahNum, ayahNum) { readingHistory[surahNum] = ayahNum; localStorage.setItem('quranReadingHistory', JSON.stringify(readingHistory)); }
+    function saveReadingHistory(surahNum, ayahNum) { 
+        readingHistory[surahNum] = ayahNum; 
+        localStorage.setItem('quranReadingHistory', JSON.stringify(readingHistory)); 
+        updateActiveAyahUI(ayahNum); // Update UI active
+    }
     function toggleSidebar() { 
         appContainer.classList.toggle('sidebar-collapsed'); 
         localStorage.setItem('sidebarState', appContainer.classList.contains('sidebar-collapsed') ? 'collapsed' : 'expanded'); 
@@ -211,16 +227,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const audioUrl = getPerAyahAudioUrl(surahNum, ayah.number.insurah);
         if (!audioUrl) { playerInfo.textContent = "Gagal mendapatkan URL audio"; return; }
         audio.src = audioUrl; audio.play().catch(e => console.error("Audio playback error:", e));
-        updatePlayerUI(surah, ayah); updateActiveAyahUI();
-        saveReadingHistory(surahNum, ayah.number.insurah);
+        updatePlayerUI(surah, ayah); updateActiveAyahUI(ayah.number.insurah);
+        saveReadingHistory(surahNum, ayah.number.insurah); // Update bookmark saat play
     }
     function updatePlayerUI(surah, ayah) { if (!isPlayingFullSurah) playerInfo.textContent = `S: ${surah.asma.id.short}, A: ${ayah.number.insurah}`; playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>'; }
-    function updateActiveAyahUI() {
-        document.querySelectorAll('.ayah.playing').forEach(el => el.classList.remove('playing'));
-        const ayah = quranData[currentSurahNumber-1]?.ayahs[currentAyahIndex]; if (!ayah) return;
-        const el = document.getElementById(`ayah-${currentSurahNumber}-${ayah.number.insurah}`);
-        if(el) { el.classList.add('playing'); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-    }
     function togglePlayPause() { if (!audio.src) playAyah(currentSurahNumber, 0, true); else if (audio.paused) audio.play(); else audio.pause(); }
     audio.onplay = () => playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
     audio.onpause = () => playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
@@ -228,14 +238,28 @@ document.addEventListener('DOMContentLoaded', () => {
     audio.onended = () => {
         if (isPlayingFullSurah) {
             const surah = quranData[currentSurahNumber - 1];
-            if (currentAyahIndex < surah.ayahs.length - 1) { playNext(true); }
-            else if (currentSurahNumber < 114) {
+            if (currentAyahIndex < surah.ayahs.length - 1) {
+                playNext(true);
+            } else if (currentSurahNumber < 114) {
                 const nextSurahNumber = currentSurahNumber + 1;
                 currentSurahNumber = nextSurahNumber;
                 renderSurah(nextSurahNumber); updateActiveSurahItem();
+                saveReadingHistory(nextSurahNumber, 1); // Set bookmark ayat 1 untuk surah baru
                 playerInfo.textContent = `Memutar Surah: ${quranData[nextSurahNumber - 1].asma.id.short}`;
-                setTimeout(() => playAyah(nextSurahNumber, 0), 500);
-            } else { isPlayingFullSurah = false; playPauseBtn.innerHTML = '<i class="fas fa-play"></i>'; playerInfo.textContent = `Selesai memutar seluruh Al-Qur'an`; }
+                if (repeatMode === 'all') {
+                    // Lanjut play di repeat all
+                    setTimeout(() => playAyah(nextSurahNumber, 0), 500);
+                } else {
+                    // Stop play, hanya pindah surah
+                    isPlayingFullSurah = false;
+                    playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+                    playerInfo.textContent = `Selesai Surah, Pindah ke Surah Berikutnya`;
+                }
+            } else {
+                isPlayingFullSurah = false;
+                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+                playerInfo.textContent = `Selesai memutar seluruh Al-Qur'an`;
+            }
         } else {
             if (repeatMode === 'one') playAyah(currentSurahNumber, currentAyahIndex, true);
             else if (repeatMode === 'all') playNext(false);
@@ -264,8 +288,21 @@ document.addEventListener('DOMContentLoaded', () => {
         renderSurah(currentSurahNumber); updateActiveSurahItem();
     });
     ayahContainer.addEventListener('click', (e) => {
-        const playBtn = e.target.closest('.play-ayah-btn'); if (playBtn) { const ayahIndex = parseInt(playBtn.closest('.ayah').dataset.ayahIndex); playAyah(currentSurahNumber, ayahIndex, true); }
-        const bookmarkBtn = e.target.closest('.bookmark-btn'); if (bookmarkBtn) { const ayahEl = bookmarkBtn.closest('.ayah'); const ayah = quranData[currentSurahNumber - 1].ayahs[parseInt(ayahEl.dataset.ayahIndex)]; toggleBookmark(currentSurahNumber, ayah.number.insurah, bookmarkBtn); }
+        const ayahEl = e.target.closest('.ayah');
+        if (!ayahEl) return;
+        const ayahIndex = parseInt(ayahEl.dataset.ayahIndex);
+        const target = e.target;
+        if (target.closest('.play-ayah-btn')) {
+            playAyah(currentSurahNumber, ayahIndex, true);
+            return;
+        }
+        if (target.closest('.bookmark-btn')) {
+            const ayah = quranData[currentSurahNumber - 1].ayahs[ayahIndex];
+            toggleBookmark(currentSurahNumber, ayah.number.insurah, target.closest('.bookmark-btn'));
+            return;
+        }
+        // Klik pada ayat: Aktifkan dan pindah bookmark
+        saveReadingHistory(currentSurahNumber, quranData[currentSurahNumber - 1].ayahs[ayahIndex].number.insurah);
     });
     playPauseBtn.addEventListener('click', togglePlayPause);
     nextBtn.addEventListener('click', () => playNext(false));
