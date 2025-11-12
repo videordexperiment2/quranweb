@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const playerInfo = document.getElementById('player-info');
     const themeToggleBtn = document.getElementById('theme-toggle-btn');
     const sidebarHideBtn = document.getElementById('sidebar-hide-btn'); // Tombol hide baru
+    const surahSearch = document.getElementById('surah-search'); // Input search baru
 
     // === STATE APLIKASI ===
     let quranData = [], imamData = [];
@@ -49,9 +50,26 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => loadingOverlay.style.display = 'none', 500);
             adjustLayout(); // Init layout adjustment
             playerInfo.textContent = ''; // Hilangkan teks default
+
+            // Event listener untuk search surah
+            surahSearch.addEventListener('input', (e) => filterSurahList(e.target.value));
         } catch (error) {
             loadingOverlay.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
         }
+    }
+
+    // === FUNGSI BARU: FILTER DAFTAR SURAH ===
+    function filterSurahList(query) {
+        const lowerQuery = query.toLowerCase();
+        document.querySelectorAll('.surah-item').forEach(item => {
+            const surahNumber = item.dataset.surahNumber;
+            const surahName = item.querySelector('strong').textContent.toLowerCase();
+            if (surahNumber.includes(lowerQuery) || surahName.includes(lowerQuery)) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
+        });
     }
 
     // === FUNGSI ADJUST LAYOUT UNTUK MOBILE RESIZE (ADDRESS BAR) ===
@@ -120,6 +138,9 @@ document.addEventListener('DOMContentLoaded', () => {
             surahItem.innerHTML = `<div class="surah-number">${surah.number}</div><div class="surah-info"><strong>${surah.asma.id.short}</strong><small>${surah.asma.translation.id} - ${surah.ayahCount} ayat</small></div>`;
             surahListContainer.appendChild(surahItem);
         });
+        // Terapkan filter jika ada query aktif
+        const query = surahSearch.value;
+        if (query) filterSurahList(query);
     }
     
     function renderSurah(surahNumber) {

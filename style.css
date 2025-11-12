@@ -60,7 +60,21 @@ body {
     transition: width 0.3s ease, padding 0.3s ease;
     flex-shrink: 0; /* Mencegah sidebar menyusut */
 }
-.sidebar-header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
+.sidebar-header { padding: 15px 20px; display: flex; flex-direction: column; align-items: center; border-bottom: 1px solid var(--border-color); } /* Ubah ke column untuk search di atas */
+#surah-search { /* Style input search */
+    width: 100%;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+#surah-search:focus { border-color: var(--accent-gold); }
+#surah-search::placeholder { color: var(--text-secondary); }
 .icon-btn { 
     background: none; 
     border: none; 
@@ -195,6 +209,7 @@ body {
     .player-info { width: 100%; order: -1; text-align: left; margin-bottom: 10px; }
     .player-controls, .player-settings { width: 100%; justify-content: space-between; }
     .arabic-text { font-size: calc(1.8rem + 1vw); }
+    #surah-search { font-size: 12px; } /* Adjust ukuran di mobile */
 }
 
 /* Portrait Mode (Vertikal, biasa di HP) */
