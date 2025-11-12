@@ -20,12 +20,13 @@
         <p>Memuat Data Al-Qur'an & Qari...</p>
     </div>
 
-    <div class="app-container">
+    <div class="app-container" id="app-container">
         <!-- Sidebar untuk Daftar Surah dan Pengaturan -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <h2>Daftar Surah</h2>
                 <button id="theme-toggle-btn" class="icon-btn" title="Ganti Tema"><i class="fas fa-sun"></i></button>
+                <button id="sidebar-hide-btn" class="icon-btn" title="Sembunyikan Daftar Surah"><i class="fas fa-eye-slash"></i></button> <!-- Tombol hide baru -->
             </div>
             <div class="surah-list-container" id="surah-list">
                 <!-- Daftar Surah akan dimuat oleh JavaScript di sini -->
@@ -35,6 +36,7 @@
         <!-- Konten Utama untuk Menampilkan Ayat -->
         <main class="main-content">
             <header class="surah-header" id="surah-header">
+                <!-- Tombol Unhide ditambahkan di sini oleh JS -->
                 <!-- Detail Surah akan dimuat di sini -->
             </header>
             <div class="ayah-list-container" id="ayah-container">

@@ -27,61 +27,113 @@
 
 /* Reset dan Pengaturan Dasar */
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Poppins', sans-serif; background-color: var(--bg-dark); color: var(--text-primary); overflow: hidden; transition: background-color 0.3s, color 0.3s; }
+body { 
+    font-family: 'Poppins', sans-serif; 
+    background-color: var(--bg-dark); 
+    color: var(--text-primary); 
+    overflow: hidden; 
+    transition: background-color 0.3s, color 0.3s; 
+    font-size: calc(14px + 0.5vw); /* Ukuran huruf base responsif */
+}
 
-/* ... (Kode Overlay Loading, Layout, dan Sidebar sama seperti sebelumnya) ... */
+/* Overlay Loading */
 #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-dark); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; transition: opacity 0.5s ease; }
 .loader { border: 4px solid var(--bg-light); border-top: 4px solid var(--accent-gold); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 20px; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* Layout Utama Aplikasi */
 .app-container { display: flex; height: 100vh; padding-bottom: 60px; }
-.sidebar { width: 320px; background-color: var(--bg-light); display: flex; flex-direction: column; border-right: 1px solid var(--border-color); }
+
+/* Sidebar */
+.sidebar {
+    width: 320px;
+    background-color: var(--bg-light);
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border-color);
+    transition: width 0.3s ease, padding 0.3s ease;
+    flex-shrink: 0; /* Mencegah sidebar menyusut */
+}
 .sidebar-header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
-.icon-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-secondary); }
-.icon-btn:hover { color: var(--accent-gold); }
-.surah-list-container { overflow-y: auto; flex-grow: 1; }
-.surah-item { display: flex; align-items: center; padding: 15px 20px; cursor: pointer; border-bottom: 1px solid var(--border-color); transition: background-color 0.2s ease; }
+.icon-btn { 
+    background: none; 
+    border: none; 
+    font-size: calc(18px + 0.5vw); 
+    cursor: pointer; 
+    color: var(--text-secondary); 
+    transition: color 0.2s, transform 0.2s, opacity 0.3s; /* Transisi profesional */
+}
+.icon-btn:hover { color: var(--accent-gold); transform: scale(1.1); } /* Efek hover profesional */
+
+/* === GAYA BARU: KONDISI SIDEBAR TERSEMBUNYI === */
+.app-container.sidebar-collapsed .sidebar {
+    width: 0;
+    padding: 0;
+    overflow: hidden;
+    border-right: none;
+}
+
+.surah-list-container { 
+    overflow-y: auto; 
+    overflow-x: hidden; /* Hilangkan scrollbar horizontal */
+    flex-grow: 1; 
+    max-height: calc(100vh - 100px); 
+}
+/* ... (gaya scrollbar & surah-item sama) ... */
+.surah-item { display: flex; align-items: center; padding: 15px 20px; cursor: pointer; border-bottom: 1px solid var(--border-color); transition: background-color 0.2s ease; font-size: calc(12px + 0.5vw); }
 .surah-item:hover { background-color: var(--bg-dark); }
 .surah-item.active { background-color: var(--accent-gold); color: var(--bg-dark); font-weight: 600; }
 .surah-item.active .surah-number { background-color: var(--bg-dark); color: var(--accent-gold); }
 .surah-item.active .surah-info small { color: #2d3748; }
-.surah-number { background-color: var(--border-color); width: 35px; height: 35px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-right: 15px; font-size: 14px; font-weight: 600; }
-.surah-info { flex-grow: 1; }
-.surah-info small { font-size: 12px; color: var(--text-secondary); }
+.surah-number { background-color: var(--border-color); width: 35px; height: 35px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-right: 15px; font-size: calc(12px + 0.3vw); font-weight: 600; flex-shrink: 0; }
+.surah-info { 
+    flex-grow: 1; 
+    white-space: normal; /* Wrap teks panjang */
+    word-break: break-word; /* Cegah overflow horizontal */
+}
+.surah-info small { font-size: calc(10px + 0.3vw); color: var(--text-secondary); }
 .surah-info strong { display: block; line-height: 1.2; }
 
 /* Konten Utama */
 .main-content { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
 .surah-header { padding: 20px; text-align: center; border-bottom: 1px solid var(--border-color); background-color: var(--bg-light); position: relative; }
-#play-full-surah-btn { position: absolute; top: 50%; right: 20px; transform: translateY(-50%); font-size: 24px; }
-.surah-header h1 { font-family: 'Scheherazade New', serif; font-size: 3rem; color: var(--accent-gold); }
-.surah-header p { color: var(--text-secondary); font-style: italic; }
 
-.ayah-list-container { overflow-y: auto; padding: 20px; }
-.bismillah-text { font-family: 'Amiri Quran', serif; font-size: 2.5rem; text-align: center; margin-bottom: 30px; color: var(--text-secondary); }
+/* === GAYA BARU: TOMBOL HIDE/UNHIDE === */
+#sidebar-hide-btn, #sidebar-unhide-btn { 
+    margin-left: 10px; /* Jarak dari tombol theme */
+    opacity: 1; 
+    transition: opacity 0.3s ease, transform 0.2s ease; 
+}
+#sidebar-hide-btn:hover, #sidebar-unhide-btn:hover { transform: scale(1.1); }
+.app-container.sidebar-collapsed #sidebar-hide-btn { display: none; opacity: 0; } /* Sembunyikan hide btn saat collapsed */
+.app-container:not(.sidebar-collapsed) #sidebar-unhide-btn { display: none; opacity: 0; } /* Sembunyikan unhide btn saat expanded */
+#sidebar-unhide-btn { 
+    position: absolute; 
+    top: 50%; 
+    left: 20px; 
+    transform: translateY(-50%); 
+}
+/* ================================================= */
+
+#play-full-surah-btn { position: absolute; top: 50%; right: 20px; transform: translateY(-50%); font-size: calc(20px + 0.5vw); }
+
+.surah-header h1 { font-family: 'Scheherazade New', serif; font-size: calc(2.5rem + 1vw); color: var(--accent-gold); }
+.surah-header p { color: var(--text-secondary); font-style: italic; font-size: calc(12px + 0.5vw); }
+
+.ayah-list-container { overflow-y: auto; padding: 20px; max-height: calc(100vh - 200px); }
+.bismillah-text { font-family: 'Amiri Quran', serif; font-size: calc(2rem + 1vw); text-align: center; margin-bottom: 30px; color: var(--text-secondary); }
 
 .ayah { padding: 25px 20px; border-bottom: 1px solid var(--border-color); margin-bottom: 15px; border-radius: 8px; background-color: var(--bg-light); transition: background-color 0.3s; }
 .ayah.playing { background-color: var(--bg-dark); box-shadow: 0 0 15px rgba(234, 179, 8, 0.2); border-left: 4px solid var(--accent-gold); }
 .ayah-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.ayah-number { background-color: var(--border-color); padding: 5px 12px; border-radius: 15px; font-size: 14px; font-weight: 600; }
-.ayah-actions button { background: none; border: none; color: var(--text-secondary); font-size: 18px; cursor: pointer; margin-left: 15px; transition: color 0.2s; }
+.ayah-number { background-color: var(--border-color); padding: 5px 12px; border-radius: 15px; font-size: calc(12px + 0.3vw); font-weight: 600; }
+.ayah-actions button { background: none; border: none; color: var(--text-secondary); font-size: calc(16px + 0.5vw); cursor: pointer; margin-left: 15px; transition: color 0.2s; }
 .ayah-actions button:hover { color: var(--accent-gold); }
 .ayah-actions button.bookmarked { color: var(--accent-blue); }
 
-.arabic-text { font-family: 'Amiri Quran', serif; font-size: 2.5rem; text-align: right; line-height: 2.8; direction: rtl; margin-bottom: 15px; }
-
-/* ================== GAYA BARU DI SINI ================== */
-.latin-text {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    font-style: italic;
-    margin-top: 20px;
-    line-height: 1.7;
-    border-left: 3px solid var(--border-color);
-    padding-left: 10px;
-}
-/* ======================================================== */
-
-.translation-text { font-size: 0.95rem; margin-top: 15px; line-height: 1.7; color: var(--text-secondary); }
+.arabic-text { font-family: 'Amiri Quran', serif; font-size: calc(2rem + 1vw); text-align: right; line-height: 2.8; direction: rtl; margin-bottom: 15px; }
+.latin-text { font-size: calc(0.8rem + 0.3vw); color: var(--text-secondary); font-style: italic; margin-top: 20px; line-height: 1.7; border-left: 3px solid var(--border-color); padding-left: 10px; }
+.translation-text { font-size: calc(0.9rem + 0.3vw); margin-top: 15px; line-height: 1.7; color: var(--text-secondary); }
 
 /* Kelas-kelas untuk pewarnaan Tajwid */
 .tajwid-ghunnah, .tajwid-idgham, .tajwid-ikhfa, .tajwid-qalqalah, .tajwid-madd, .tajwid-lafsalah { font-weight: bold; }
@@ -92,22 +144,50 @@ body { font-family: 'Poppins', sans-serif; background-color: var(--bg-dark); col
 .tajwid-madd     { color: var(--tajwid-madd); }
 .tajwid-lafsalah { color: var(--tajwid-lafsalah); }
 
-/* ... (Sisa kode CSS untuk Audio Player dan Responsif sama seperti sebelumnya) ... */
+/* ... (Sisa kode CSS untuk Audio Player dan Responsif sama persis) ... */
 .audio-player { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background-color: var(--bg-light); border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 500; }
-.control-btn { background: none; border: none; color: var(--text-primary); font-size: 20px; cursor: pointer; padding: 10px; width: 45px; position: relative; }
+.control-btn { background: none; border: none; color: var(--text-primary); font-size: calc(18px + 0.5vw); cursor: pointer; padding: 10px; width: 45px; position: relative; }
 .control-btn:hover { color: var(--accent-gold); }
-.player-info { flex-grow: 1; text-align: center; color: var(--text-secondary); }
+.player-info { flex-grow: 1; text-align: center; color: var(--text-secondary); font-size: calc(12px + 0.3vw); }
 .player-settings { display: flex; align-items: center; }
-#imam-select { background-color: var(--bg-dark); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 5px; padding: 5px 8px; margin-right: 15px; }
+#imam-select { background-color: var(--bg-dark); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 5px; padding: 5px 8px; margin-right: 15px; font-size: calc(12px + 0.3vw); }
 #repeat-btn.active { color: var(--accent-blue); }
 #repeat-btn.one::after { content: "1"; font-size: 10px; position: absolute; top: 8px; right: 8px; font-family: 'Poppins', sans-serif; font-weight: bold; }
 
+/* Media Queries untuk Responsif */
 @media (max-width: 768px) {
     .app-container { flex-direction: column; }
-    .sidebar { width: 100%; height: 40vh; border-right: none; border-bottom: 1px solid var(--border-color); }
-    .main-content { height: 60vh; }
+    .sidebar { position: fixed; height: 100vh; z-index: 600; width: 100%; } /* Full width di mobile */
+    .app-container.sidebar-collapsed .main-content { margin-left: 0; }
+    .main-content { transition: margin-left 0.3s ease; margin-left: 0; } /* Adjust margin */
     .audio-player { flex-wrap: wrap; height: auto; padding: 10px; }
     .player-info { width: 100%; order: -1; text-align: left; margin-bottom: 10px; }
     .player-controls, .player-settings { width: 100%; justify-content: space-between; }
-    .arabic-text { font-size: 2rem; }
+    .arabic-text { font-size: calc(1.8rem + 1vw); }
+}
+
+/* Portrait Mode (Vertikal, biasa di HP) */
+@media (orientation: portrait) {
+    body { font-size: calc(12px + 0.4vw); } /* Huruf lebih kecil untuk vertikal */
+    .sidebar { width: 100%; padding: 10px; } /* Full width, padding ringkas */
+    .arabic-text { font-size: calc(1.8rem + 0.8vw); line-height: 2.5; }
+    .surah-header h1 { font-size: calc(2rem + 0.8vw); }
+    .ayah { padding: 15px 10px; } /* Padding lebih kecil */
+    .ayah-list-container { padding: 10px; max-height: calc(100vh - 150px); }
+}
+
+/* Landscape Mode (Horizontal) */
+@media (orientation: landscape) {
+    body { font-size: calc(14px + 0.6vw); } /* Huruf lebih besar untuk horizontal */
+    .sidebar { width: 320px; padding: 20px; } /* Lebar standar, padding lebih lebar */
+    .arabic-text { font-size: calc(2.2rem + 1.2vw); line-height: 3; }
+    .surah-header h1 { font-size: calc(2.8rem + 1.2vw); }
+    .ayah { padding: 25px 20px; } /* Padding lebih besar */
+    .ayah-list-container { padding: 20px; max-height: calc(100vh - 180px); }
+}
+
+@media (min-width: 769px) {
+    body { font-size: calc(16px + 0.5vw); } /* Huruf lebih besar di desktop */
+    .sidebar { width: 320px; } /* Lebar tetap */
+    .arabic-text { font-size: calc(2.5rem + 1vw); }
 }
