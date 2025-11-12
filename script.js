@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const SUKUN = '\u0652';
     const TASHDID = '\u0651';
     const TANWIN_REGEX = '[\u064b\u064d\u064c]';
-    
     const HURUQ_QALQALAH = '[قطبجد]';
     const HURUQ_IDGHAM_BIGHUNNAH = 'ينمو';
     const HURUQ_IDGHAM_BILAGHUNNAH = 'لر';
@@ -59,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
         coloredText = coloredText.replace(/(ٱللَّهِ|ٱللَّهَ|ٱللَّهُ)/g, '<span class="tajwid-lafsalah">$1</span>');
         coloredText = coloredText.replace(/(آ|[^\s]+\u0653[^\s]*)/g, '<span class="tajwid-madd">$1</span>');
         coloredText = coloredText.replace(/([نم])\u0651/g, '<span class="tajwid-ghunnah">$1' + TASHDID + '</span>');
-        coloredText = coloredText.replace(new RegExp(`(${HURUQ_QALQALAH})${SUKUN}`, 'g'), '<span class="tajwid-qalqalah">$1' + SUKUND + '</span>');
+        coloredText = coloredText.replace(new RegExp(`(${HURUQ_QALQALAH})${SUKUN}`, 'g'), '<span class="tajwid-qalqalah">$1' + SUKUN + '</span>');
         const idghamRegex = new RegExp(`(ن${SUKUN}|${TANWIN_REGEX})(\\s*)(${'['+HURUQ_IDGHAM_TOTAL+']'})`, 'g');
         coloredText = coloredText.replace(idghamRegex, '<span class="tajwid-idgham">$1</span>$2$3');
         const iqlabRegex = new RegExp(`(ن${SUKUN}|${TANWIN_REGEX})(\\s*)(${HURUQ_IQLAB})`, 'g');
@@ -115,6 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
         surah.ayahs.forEach((ayah, index) => {
             const isBookmarked = bookmarks.some(b => b.surah === surah.number && b.ayah === ayah.number.insurah);
             const coloredArabicText = applyTajwidColoring(ayah.text.ar);
+            const latinText = ayah.text.read;
             const ayahEl = document.createElement('div');
             ayahEl.className = 'ayah';
             ayahEl.id = `ayah-${surah.number}-${ayah.number.insurah}`;
@@ -128,6 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
                 <p class="arabic-text">${coloredArabicText}</p>
+                <p class="latin-text">${latinText}</p>
                 <p class="translation-text">${ayah.translation.id}</p>
             `;
             ayahContainer.appendChild(ayahEl);
@@ -143,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function playAyah(surahNum, ayahIndex, isManualClick = false) {
         if (isManualClick) isPlayingFullSurah = false;
         currentSurahNumber = surahNum; currentAyahIndex = ayahIndex;
-        const surah = quranData[surahNum - 1], ayah = surah.ayahs[ayahIndex];
+        const surah = quranData[surahNum - 1]; const ayah = surah.ayahs[ayahIndex];
         const audioUrl = getPerAyahAudioUrl(surahNum, ayah.number.insurah);
         if (!audioUrl) { playerInfo.textContent = "Gagal mendapatkan URL audio"; return; }
         audio.src = audioUrl; audio.play().catch(e => console.error("Audio playback error:", e));
