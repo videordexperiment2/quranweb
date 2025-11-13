@@ -229,13 +229,15 @@ body {
 .translation-text { font-size: calc(0.9rem + 0.3vw); margin-top: 15px; line-height: 1.7; color: var(--text-secondary); }
 
 /* Kelas-kelas untuk pewarnaan Tajwid */
-.tajwid-ghunnah, .tajwid-idgham, .tajwid-ikhfa, .tajwid-qalqalah, .tajwid-madd, .tajwid-lafsalah { font-weight: bold; }
+.tajwid-ghunnah, .tajwid-idgham, .tajwid-ikhfa, .tajwid-qalqalah, .tajwid-madd, .tajwid-lafsalah, .tajwid-idgham-gray, .tajwid-iqlab { font-weight: bold; }
 .tajwid-ghunnah  { color: var(--tajwid-ghunnah); }
 .tajwid-idgham   { color: var(--tajwid-idgham); }
 .tajwid-ikhfa    { color: var(--tajwid-ikhfa); }
 .tajwid-qalqalah { color: var(--tajwid-qalqalah); }
 .tajwid-madd     { color: var(--tajwid-madd); }
 .tajwid-lafsalah { color: var(--tajwid-lafsalah); }
+.tajwid-idgham-gray { color: #6b7280; } /* Abu-abu untuk huruf yang di-idgham (tidak dilafalkan) */
+.tajwid-iqlab { color: var(--tajwid-idgham); } /* Oranye untuk iqlab (sama dengan idgham) */
 
 /* Audio Player */
 .audio-player { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background-color: var(--bg-light); border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 500; }

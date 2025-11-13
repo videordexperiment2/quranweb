@@ -43,8 +43,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // === FUNGSI UTAMA & INISIALISASI ===
     async function initializeApp() {
         try {
-            const [quranResponse, imamResponse] = await Promise.all([ fetch('./data/quran.json'), fetch('./data/imam.json') ]);
-            if (!quranResponse.ok || !imamResponse.ok) throw new Error('Gagal memuat file data lokal.');
+            const [quranResponse, imamResponse] = await Promise.all([ 
+                fetch('https://raw.githubusercontent.com/urangbandung/quran/main/data/quran.json'), 
+                fetch('https://raw.githubusercontent.com/urangbandung/quran/main/data/imam.json') 
+            ]);
+            if (!quranResponse.ok || !imamResponse.ok) throw new Error('Gagal memuat data dari server.');
             quranData = await quranResponse.json();
             imamData = await imamResponse.json();
             renderImamList();
@@ -87,32 +90,94 @@ document.addEventListener('DOMContentLoaded', () => {
         appContainer.style.height = `calc(var(--vh, 1vh) * 100 - 60px)`; // Adjust height dinamis
     }
 
-    // === FUNGSI PEWARNAAN TAJWID (VERSI CERDAS) ===
+    // === FUNGSI PEWARNAAN TAJWID (DENGAN PRESERVASI HARAKAT) ===
     function applyTajwidColoring(text) {
+        // Helper: Ambil semua harakat yang melekat pada huruf
+        function getHarakatPattern() {
+            return '[\u064B-\u0652\u0670\u0653]'; // Semua tanda harakat Arab
+        }
+
+        // Helper: Wrap huruf dengan harakat agar tidak terpisah
+        function wrapWithColor(str, className) {
+            return `<span class="${className}">${str}</span>`;
+        }
+
         const words = text.split(' ');
         let result = [];
+
         for (let i = 0; i < words.length; i++) {
             let currentWord = words[i];
             const nextWord = words[i + 1] || '';
-            const nextFirstChar = nextWord.charAt(0);
+            
+            // Ambil huruf pertama dari kata berikutnya (tanpa harakat)
+            const nextFirstChar = nextWord.replace(new RegExp(getHarakatPattern(), 'g'), '').charAt(0);
+            
+            let processedWord = currentWord;
             let ruleApplied = false;
-            if ((currentWord.endsWith(SUKUN) && currentWord.charAt(currentWord.length - 2) === 'ن') || TANWIN_REGEX.test(currentWord.slice(-1))) {
+
+            // === 1. CEK NUN MATI / TANWIN ===
+            // Pattern: nun + sukun atau tanwin di akhir kata
+            const hasTanwin = /[\u064B\u064C\u064D]$/.test(currentWord);
+            const hasNunSukun = /ن\u0652/.test(currentWord);
+
+            if (hasTanwin || hasNunSukun) {
+                // Idgham (lebur)
                 if (HURUQ_IDGHAM_TOTAL.includes(nextFirstChar)) {
-                    currentWord = `<span class="tajwid-idgham">${currentWord}</span>`; ruleApplied = true;
-                } else if (HURUQ_IQLAB.includes(nextFirstChar)) {
-                    currentWord = `<span class="tajwid-idgham">${currentWord}</span>`; ruleApplied = true;
-                } else if (HURUQ_IKHFA.includes(nextFirstChar)) {
-                    currentWord = `<span class="tajwid-ikhfa">${currentWord}</span>`; ruleApplied = true;
+                    processedWord = wrapWithColor(currentWord, 'tajwid-idgham-gray'); // Abu-abu untuk nun yang hilang
+                    ruleApplied = true;
+                } 
+                // Iqlab (membalik jadi mim)
+                else if (HURUQ_IQLAB.includes(nextFirstChar)) {
+                    processedWord = wrapWithColor(currentWord, 'tajwid-iqlab');
+                    ruleApplied = true;
+                } 
+                // Ikhfa' (samar)
+                else if (HURUQ_IKHFA.includes(nextFirstChar)) {
+                    processedWord = wrapWithColor(currentWord, 'tajwid-ikhfa');
+                    ruleApplied = true;
                 }
             }
+
+            // === 2. JIKA BELUM ADA RULE, CEK YANG LAIN ===
             if (!ruleApplied) {
-                currentWord = currentWord.replace(/(ٱللَّهِ|ٱللَّهَ|ٱللَّهُ)/g, '<span class="tajwid-lafsalah">$1</span>');
-                currentWord = currentWord.replace(/(آ|[^\s]+\u0653[^\s]*)/g, '<span class="tajwid-madd">$1</span>');
-                currentWord = currentWord.replace(/([نم])\u0651/g, '<span class="tajwid-ghunnah">$1' + TASHDID + '</span>');
-                currentWord = currentWord.replace(new RegExp(`([${HURUQ_QALQALAH}])${SUKUN}`, 'g'), '<span class="tajwid-qalqalah">$1' + SUKUN + '</span>');
+                // Lafadz Jalalah
+                processedWord = processedWord.replace(
+                    /(ٱللَّهِ|ٱللَّهَ|ٱللَّهُ)/g, 
+                    wrapWithColor('$1', 'tajwid-lafsalah')
+                );
+
+                // Mad (panjang) - hati-hati dengan harakat
+                processedWord = processedWord.replace(
+                    /(آ[\u064B-\u0652]*|[اوى][\u064B-\u0652]*)/g,
+                    function(match) {
+                        // Cek apakah ini mad yang valid
+                        if (/[اوى]\u0652/.test(match) || /آ/.test(match)) {
+                            return wrapWithColor(match, 'tajwid-madd');
+                        }
+                        return match;
+                    }
+                );
+
+                // Ghunnah (nun/mim bertashdid) - dengan harakat lengkap
+                processedWord = processedWord.replace(
+                    /([نم])\u0651([\u064B-\u0650]?)/g,
+                    function(match, huruf, harakat) {
+                        return wrapWithColor(huruf + '\u0651' + (harakat || ''), 'tajwid-ghunnah');
+                    }
+                );
+
+                // Qalqalah - dengan harakat lengkap
+                processedWord = processedWord.replace(
+                    new RegExp(`([${HURUQ_QALQALAH}])\u0652`, 'g'),
+                    function(match, huruf) {
+                        return wrapWithColor(huruf + '\u0652', 'tajwid-qalqalah');
+                    }
+                );
             }
-            result.push(currentWord);
+
+            result.push(processedWord);
         }
+
         return result.join(' ');
     }
     
