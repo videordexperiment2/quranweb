@@ -237,14 +237,21 @@ body {
 .tajwid-madd     { color: var(--tajwid-madd); }
 .tajwid-lafsalah { color: var(--tajwid-lafsalah); }
 
-/* ... (Sisa kode CSS untuk Audio Player dan Responsif sama persis) ... */
+/* Audio Player */
 .audio-player { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background-color: var(--bg-light); border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 500; }
 .player-info { flex-grow: 1; text-align: center; color: var(--text-secondary); font-size: calc(12px + 0.3vw); }
 .player-settings { display: flex; align-items: center; }
 #imam-select { background-color: var(--bg-dark); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 5px; padding: 5px 8px; margin-right: 15px; font-size: calc(12px + 0.3vw); }
-/* #repeat-btn pindah ke header, style di atas */
 
-#repeat-btn.one::after { content: "1"; font-size: 10px; position: absolute; top: 8px; right: 8px; font-family: 'Poppins', sans-serif; font-weight: bold; color: var(--accent-blue); }
+/* Scrollbar Styling */
+.surah-list-container::-webkit-scrollbar,
+.ayah-list-container::-webkit-scrollbar { width: 8px; }
+.surah-list-container::-webkit-scrollbar-track,
+.ayah-list-container::-webkit-scrollbar-track { background: var(--bg-dark); }
+.surah-list-container::-webkit-scrollbar-thumb,
+.ayah-list-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+.surah-list-container::-webkit-scrollbar-thumb:hover,
+.ayah-list-container::-webkit-scrollbar-thumb:hover { background: var(--accent-gold); }
 
 /* Media Queries untuk Responsif */
 @media (max-width: 768px) {
@@ -288,4 +295,18 @@ body {
     body { font-size: calc(16px + 0.5vw); } /* Huruf lebih besar di desktop */
     .sidebar { width: 320px; } /* Lebar tetap */
     .arabic-text { font-size: calc(2.5rem + 1vw); }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.ayah { animation: fadeIn 0.3s ease; }
+
+/* Print Styles */
+@media print {
+    .sidebar, .audio-player, .ayah-actions, #sidebar-unhide-btn, #repeat-btn, #play-full-surah-btn { display: none !important; }
+    .main-content { width: 100%; }
+    .ayah { page-break-inside: avoid; border: 1px solid #000; }
 }
