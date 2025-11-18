@@ -44,9 +44,9 @@ body {
 /* Layout Utama Aplikasi */
 .app-container { 
     display: flex; 
-    height: calc(100vh - env(safe-area-inset-top)); /* Adaptif dengan safe area (notch/address bar) */
-    padding-bottom: 60px; 
-    transition: height 0.3s ease; /* Smooth saat resize */
+    height: calc(100vh - 60px); /* Fill screen height minus the audio player */
+    padding-bottom: 0; 
+    transition: height 0.3s ease;
     overflow: hidden;
 }
 
@@ -158,10 +158,9 @@ body {
 /* ================================================= */
 
 /* Style untuk tombol repeat di header (sebelah kiri play full, flat) */
-#repeat-btn { 
+#repeat-btn, #fullscreen-btn { 
     position: absolute; 
     top: 50%; 
-    right: 90px; /* Geser lebih kiri (dari 60px ke 90px) */
     /* transform: translateY(-50%);  */
     font-size: calc(20px + 0.5vw); 
     background: transparent; /* Transparent/flat */
@@ -176,6 +175,14 @@ body {
     display: inline-block;
     text-align: center;
     pointer-events: auto; /* Pastikan interaksi normal */
+}
+
+#repeat-btn { 
+    right: 55px;
+}
+
+#fullscreen-btn {
+    right: 90px; /* Posisikan di sebelah kiri tombol repeat */
 }
 #repeat-btn:hover { 
     color: var(--accent-gold); 

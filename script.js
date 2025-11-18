@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     // === Definisi Huruf & Aturan Tajwid ===
-    const SUKUN = '\u0652';
-    const TASHDID = '\u0651';
-    const TANWIN_REGEX = /[\u064b\u064d\u064c]/;
+    const SUKUN = 'ْ';
+    const TASHDID = 'ّ';
+    const TANWIN_REGEX = /[ًٌٍ]/;
     const HURUQ_QALQALAH = 'قطبجد';
     const HURUQ_IDGHAM_BIGHUNNAH = 'ينمو';
     const HURUQ_IDGHAM_BILAGHUNNAH = 'لر';
@@ -43,11 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // === FUNGSI UTAMA & INISIALISASI ===
     async function initializeApp() {
         try {
-            const [quranResponse, imamResponse] = await Promise.all([ 
-                fetch('https://raw.githubusercontent.com/urangbandung/quran/main/data/quran.json'), 
-                fetch('https://raw.githubusercontent.com/urangbandung/quran/main/data/imam.json') 
-            ]);
-            if (!quranResponse.ok || !imamResponse.ok) throw new Error('Gagal memuat data dari server.');
+            const [quranResponse, imamResponse] = await Promise.all([ fetch('./data/quran.json'), fetch('./data/imam.json') ]);
+            if (!quranResponse.ok || !imamResponse.ok) throw new Error('Gagal memuat file data lokal.');
             quranData = await quranResponse.json();
             imamData = await imamResponse.json();
             renderImamList();
@@ -94,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function applyTajwidColoring(text) {
         // Helper: Ambil semua harakat yang melekat pada huruf
         function getHarakatPattern() {
-            return '[\u064B-\u0652\u0670\u0653]'; // Semua tanda harakat Arab
+            return '[ً-ْٰٓ]'; // Semua tanda harakat Arab
         }
 
         // Helper: Wrap huruf dengan harakat agar tidak terpisah
@@ -117,8 +114,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // === 1. CEK NUN MATI / TANWIN ===
             // Pattern: nun + sukun atau tanwin di akhir kata
-            const hasTanwin = /[\u064B\u064C\u064D]$/.test(currentWord);
-            const hasNunSukun = /ن\u0652/.test(currentWord);
+            const hasTanwin = /[ًٌٍ]$/.test(currentWord);
+            const hasNunSukun = /نْ/.test(currentWord);
 
             if (hasTanwin || hasNunSukun) {
                 // Idgham (lebur)
@@ -148,10 +145,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Mad (panjang) - hati-hati dengan harakat
                 processedWord = processedWord.replace(
-                    /(آ[\u064B-\u0652]*|[اوى][\u064B-\u0652]*)/g,
+                    /(آ[ً-ْ]*|[اوى][ً-ْ]*)/g,
                     function(match) {
                         // Cek apakah ini mad yang valid
-                        if (/[اوى]\u0652/.test(match) || /آ/.test(match)) {
+                        if (/[اوى]ْ/.test(match) || /آ/.test(match)) {
                             return wrapWithColor(match, 'tajwid-madd');
                         }
                         return match;
@@ -160,17 +157,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Ghunnah (nun/mim bertashdid) - dengan harakat lengkap
                 processedWord = processedWord.replace(
-                    /([نم])\u0651([\u064B-\u0650]?)/g,
+                    /([نم])ّ([ً-ِ]?)/g,
                     function(match, huruf, harakat) {
-                        return wrapWithColor(huruf + '\u0651' + (harakat || ''), 'tajwid-ghunnah');
+                        return wrapWithColor(huruf + 'ّ' + (harakat || ''), 'tajwid-ghunnah');
                     }
                 );
 
                 // Qalqalah - dengan harakat lengkap
                 processedWord = processedWord.replace(
-                    new RegExp(`([${HURUQ_QALQALAH}])\u0652`, 'g'),
+                    new RegExp(`([${HURUQ_QALQALAH}])ْ`, 'g'),
                     function(match, huruf) {
-                        return wrapWithColor(huruf + '\u0652', 'tajwid-qalqalah');
+                        return wrapWithColor(huruf + 'ْ', 'tajwid-qalqalah');
                     }
                 );
             }
@@ -229,6 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
         surahHeader.innerHTML = `
             <button id="sidebar-unhide-btn" class="icon-btn" title="Tampilkan Daftar Surah"><i class="fas fa-eye"></i></button> <!-- Tombol unhide -->
             <button id="repeat-btn" class="control-btn" title="Mode Ulangi"><i class="fas fa-sync"></i></button> <!-- Tombol repeat dipindah ke sini -->
+            <button id="fullscreen-btn" class="icon-btn" title="Layar Penuh"><i class="fas fa-expand"></i></button>
             <button id="play-full-surah-btn" class="icon-btn" title="Play Seluruh Surah"><i class="fas fa-play-circle"></i></button>
             <h1>${surah.asma.ar.short}</h1>
             <p>${surah.asma.id.long} • ${surah.ayahCount} Ayat</p>
@@ -236,6 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('play-full-surah-btn').addEventListener('click', togglePlayFull);
         document.getElementById('sidebar-unhide-btn').addEventListener('click', toggleSidebar);
         document.getElementById('repeat-btn').addEventListener('click', toggleRepeatMode); // Event listener untuk repeat
+        document.getElementById('fullscreen-btn').addEventListener('click', toggleFullScreen); // Event listener untuk fullscreen
         ayahContainer.innerHTML = bismillahHtml;
         surah.ayahs.forEach((ayah, index) => {
             const coloredArabicText = applyTajwidColoring(ayah.text.ar);
@@ -548,6 +547,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event listener untuk resize (address bar hide/show)
     window.addEventListener('resize', adjustLayout);
     window.addEventListener('orientationchange', adjustLayout); // Untuk portrait/landscape
+
+    function toggleFullScreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+    }
+
+    document.addEventListener('fullscreenchange', () => {
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        if (!fullscreenBtn) return;
+        if (document.fullscreenElement) {
+            fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+            fullscreenBtn.title = "Keluar Layar Penuh";
+        } else {
+            fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            fullscreenBtn.title = "Layar Penuh";
+        }
+    });
+
 
     // === JALANKAN APLIKASI ===
     initializeApp();
