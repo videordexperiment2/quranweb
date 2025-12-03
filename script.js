@@ -35,15 +35,15 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentSurahNumber = lastReadSurah, currentAyahIndex = -1, isPlayingFullSurah = false;
     // Ambil Imam terakhir dari localStorage, default ke 1
     let selectedImamId = parseInt(localStorage.getItem('selectedImam')) || 1;
-    // Ambil mode repeat terakhir dari localStorage, default ke 'none'
-    let repeatMode = localStorage.getItem('repeatMode') || 'none';
+    // Ambil mode repeat terakhir dari localStorage, default ke 'all' (sebelumnya 'none')
+    let repeatMode = localStorage.getItem('repeatMode') || 'all';
     const audio = new Audio();
     let currentPlayingAyahEl = null; // Track ayat yang sedang playing untuk update ikon
 
     // === FUNGSI UTAMA & INISIALISASI ===
     async function initializeApp() {
         try {
-            const [quranResponse, imamResponse] = await Promise.all([ fetch('./data/quran.json'), fetch('./data/imam.json') ]);
+            const [quranResponse, imamResponse] = await Promise.all([fetch('./data/quran.json'), fetch('./data/imam.json')]);
             if (!quranResponse.ok || !imamResponse.ok) throw new Error('Gagal memuat file data lokal.');
             quranData = await quranResponse.json();
             imamData = await imamResponse.json();
@@ -61,6 +61,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Event listener untuk search surah
             surahSearch.addEventListener('input', (e) => filterSurahList(e.target.value));
+
+            // Auto-play saat page load (jika browser mengizinkan)
+            setTimeout(() => {
+                playFullSurah();
+            }, 1000); // Delay sedikit untuk memastikan DOM siap dan interaksi minimal (meski auto-play policy mungkin tetap memblokir)
         } catch (error) {
             loadingOverlay.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
         }
@@ -105,10 +110,10 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let i = 0; i < words.length; i++) {
             let currentWord = words[i];
             const nextWord = words[i + 1] || '';
-            
+
             // Ambil huruf pertama dari kata berikutnya (tanpa harakat)
             const nextFirstChar = nextWord.replace(new RegExp(getHarakatPattern(), 'g'), '').charAt(0);
-            
+
             let processedWord = currentWord;
             let ruleApplied = false;
 
@@ -122,12 +127,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (HURUQ_IDGHAM_TOTAL.includes(nextFirstChar)) {
                     processedWord = wrapWithColor(currentWord, 'tajwid-idgham-gray'); // Abu-abu untuk nun yang hilang
                     ruleApplied = true;
-                } 
+                }
                 // Iqlab (membalik jadi mim)
                 else if (HURUQ_IQLAB.includes(nextFirstChar)) {
                     processedWord = wrapWithColor(currentWord, 'tajwid-iqlab');
                     ruleApplied = true;
-                } 
+                }
                 // Ikhfa' (samar)
                 else if (HURUQ_IKHFA.includes(nextFirstChar)) {
                     processedWord = wrapWithColor(currentWord, 'tajwid-ikhfa');
@@ -139,14 +144,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!ruleApplied) {
                 // Lafadz Jalalah
                 processedWord = processedWord.replace(
-                    /(ٱللَّهِ|ٱللَّهَ|ٱللَّهُ)/g, 
+                    /(ٱللَّهِ|ٱللَّهَ|ٱللَّهُ)/g,
                     wrapWithColor('$1', 'tajwid-lafsalah')
                 );
 
                 // Mad (panjang) - hati-hati dengan harakat
                 processedWord = processedWord.replace(
                     /(آ[ً-ْ]*|[اوى][ً-ْ]*)/g,
-                    function(match) {
+                    function (match) {
                         // Cek apakah ini mad yang valid
                         if (/[اوى]ْ/.test(match) || /آ/.test(match)) {
                             return wrapWithColor(match, 'tajwid-madd');
@@ -158,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Ghunnah (nun/mim bertashdid) - dengan harakat lengkap
                 processedWord = processedWord.replace(
                     /([نم])ّ([ً-ِ]?)/g,
-                    function(match, huruf, harakat) {
+                    function (match, huruf, harakat) {
                         return wrapWithColor(huruf + 'ّ' + (harakat || ''), 'tajwid-ghunnah');
                     }
                 );
@@ -166,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Qalqalah - dengan harakat lengkap
                 processedWord = processedWord.replace(
                     new RegExp(`([${HURUQ_QALQALAH}])ْ`, 'g'),
-                    function(match, huruf) {
+                    function (match, huruf) {
                         return wrapWithColor(huruf + 'ْ', 'tajwid-qalqalah');
                     }
                 );
@@ -177,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return result.join(' ');
     }
-    
+
     // === FUNGSI PEMBENTUKAN URL AUDIO ===
     function getPerAyahAudioUrl(surahNum, ayahNumInSurah) {
         const imam = imamData.find(i => i.id == selectedImamId);
@@ -212,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const query = surahSearch.value;
         if (query) filterSurahList(query);
     }
-    
+
     function renderSurah(surahNumber) {
         const surah = quranData[surahNumber - 1];
         if (!surah) return;
@@ -279,15 +284,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 const containerRect = ayahContainer.getBoundingClientRect();
                 const ayahRect = el.getBoundingClientRect();
                 const headerHeight = surahHeader.offsetHeight;
-                
+
                 // Hitung apakah ayat sudah berada di posisi yang tepat (visible dan di atas)
                 const ayahTopRelative = ayahRect.top - containerRect.top;
                 const targetPosition = headerHeight;
-                
+
                 // Hanya scroll jika ayat tidak di posisi ideal (dengan toleransi 50px)
                 if (Math.abs(ayahTopRelative - targetPosition) > 50 || ayahRect.bottom > containerRect.bottom) {
                     const ayahOffsetTop = el.offsetTop;
-                    
+
                     // Smooth scroll dengan behavior
                     ayahContainer.scrollTo({
                         top: ayahOffsetTop - headerHeight,
@@ -342,16 +347,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // === LOGIKA RIWAYAT, SIDEBAR, TEMA ===
-    function saveReadingHistory(surahNum, ayahNum, skipScroll = false) { 
-        readingHistory[surahNum] = ayahNum; 
-        localStorage.setItem('quranReadingHistory', JSON.stringify(readingHistory)); 
+    function saveReadingHistory(surahNum, ayahNum, skipScroll = false) {
+        readingHistory[surahNum] = ayahNum;
+        localStorage.setItem('quranReadingHistory', JSON.stringify(readingHistory));
         // Simpan juga surah terakhir yang dibaca
         localStorage.setItem('lastReadSurah', surahNum);
         updateActiveAyahUI(ayahNum, skipScroll); // Update UI active dan scroll (optional)
     }
-    function toggleSidebar() { 
-        appContainer.classList.toggle('sidebar-collapsed'); 
-        localStorage.setItem('sidebarState', appContainer.classList.contains('sidebar-collapsed') ? 'collapsed' : 'expanded'); 
+    function toggleSidebar() {
+        appContainer.classList.toggle('sidebar-collapsed');
+        localStorage.setItem('sidebarState', appContainer.classList.contains('sidebar-collapsed') ? 'collapsed' : 'expanded');
         updateToggleButtons(); // Update visibility setelah toggle
     }
     function updateToggleButtons() {
@@ -360,8 +365,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const unhideBtn = document.getElementById('sidebar-unhide-btn');
         if (unhideBtn) unhideBtn.style.display = isCollapsed ? 'inline-block' : 'none';
     }
-    function initSidebar() { 
-        if (localStorage.getItem('sidebarState') === 'collapsed') appContainer.classList.add('sidebar-collapsed'); 
+    function initSidebar() {
+        // Default ke 'collapsed' jika tidak ada di localStorage
+        const state = localStorage.getItem('sidebarState');
+        if (state === 'collapsed' || state === null) appContainer.classList.add('sidebar-collapsed');
         updateToggleButtons(); // Init visibility
         sidebarHideBtn.addEventListener('click', toggleSidebar); // Event listener untuk tombol hide
     }
@@ -379,7 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             const repeatBtn = document.getElementById('repeat-btn');
             if (!repeatBtn) return;
-            
+
             repeatBtn.classList.remove('active', 'one');
             if (repeatMode === 'all') {
                 repeatBtn.classList.add('active');
@@ -395,7 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }, 200);
     }
-    
+
     // === LOGIKA AUDIO PLAYER ===
     function playFullSurah() {
         audio.pause(); isPlayingFullSurah = true;
@@ -412,7 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const audioUrl = getPerAyahAudioUrl(surahNum, ayah.number.insurah);
         if (!audioUrl) { playerInfo.textContent = "Gagal mendapatkan URL audio"; return; }
         audio.src = audioUrl; audio.play().catch(e => console.error("Audio playback error:", e));
-        updatePlayerUI(surah, ayah); 
+        updatePlayerUI(surah, ayah);
         // Update UI dan scroll SEKALI saja di sini
         updateActiveAyahUI(ayah.number.insurah);
         // Simpan history TANPA scroll lagi (skipScroll = true)
@@ -421,8 +428,8 @@ document.addEventListener('DOMContentLoaded', () => {
         updateAyahButtonIcons(); // Update ikon ayat
         updatePlayFullButton(); // Update ikon play full
     }
-    function updatePlayerUI(surah, ayah) { 
-        if (!isPlayingFullSurah) playerInfo.textContent = `S: ${surah.asma.id.short}, A: ${ayah.number.insurah}`; 
+    function updatePlayerUI(surah, ayah) {
+        if (!isPlayingFullSurah) playerInfo.textContent = `S: ${surah.asma.id.short}, A: ${ayah.number.insurah}`;
         else playerInfo.textContent = `Memutar Surah: ${surah.asma.id.short}`;
     }
     audio.onplay = () => {
@@ -475,26 +482,26 @@ document.addEventListener('DOMContentLoaded', () => {
     function toggleRepeatMode() {
         const repeatBtn = document.getElementById('repeat-btn');
         repeatBtn.classList.remove('one');
-        if (repeatMode === 'none') { 
-            repeatMode = 'all'; 
-            repeatBtn.classList.add('active'); 
+        if (repeatMode === 'none') {
+            repeatMode = 'all';
+            repeatBtn.classList.add('active');
             repeatBtn.innerHTML = '<i class="fas fa-sync-alt"></i>'; // Icon untuk repeat all
-            repeatBtn.title = "Ulangi Semua"; 
-        } else if (repeatMode === 'all') { 
-            repeatMode = 'one'; 
-            repeatBtn.classList.add('one'); 
+            repeatBtn.title = "Ulangi Semua";
+        } else if (repeatMode === 'all') {
+            repeatMode = 'one';
+            repeatBtn.classList.add('one');
             repeatBtn.innerHTML = '<i class="fas fa-sync"></i>'; // Icon untuk repeat one dengan "1" after
-            repeatBtn.title = "Ulangi Satu"; 
-        } else { 
-            repeatMode = 'none'; 
-            repeatBtn.classList.remove('active'); 
+            repeatBtn.title = "Ulangi Satu";
+        } else {
+            repeatMode = 'none';
+            repeatBtn.classList.remove('active');
             repeatBtn.innerHTML = '<i class="fas fa-sync"></i>'; // Icon untuk off
-            repeatBtn.title = "Mode Ulangi"; 
+            repeatBtn.title = "Mode Ulangi";
         }
         // Simpan repeat mode ke localStorage
         localStorage.setItem('repeatMode', repeatMode);
     }
-    
+
     // === EVENT LISTENERS ===
     surahListContainer.addEventListener('click', (e) => {
         const surahItem = e.target.closest('.surah-item'); if (!surahItem) return;
@@ -525,7 +532,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         // Klik pada ayat: Aktifkan dan pindah bookmark
         saveReadingHistory(currentSurahNumber, quranData[currentSurahNumber - 1].ayahs[ayahIndex].number.insurah);
-        
+
         // Jika sedang ada audio playing (termasuk play all), pindah play ke ayat yang diklik
         if (!audio.paused) {
             // JANGAN ubah isPlayingFullSurah, biarkan tetap sesuai mode saat ini
