@@ -67,6 +67,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 toggleFullScreen(); // Coba masuk fullscreen
                 playFullSurah();
             }, 1000); // Delay sedikit untuk memastikan DOM siap dan interaksi minimal (meski auto-play policy mungkin tetap memblokir)
+
+            // Fallback: Paksa fullscreen pada interaksi pertama jika belum fullscreen
+            const fullscreenFallback = () => {
+                if (!document.fullscreenElement) {
+                    toggleFullScreen();
+                }
+                // Hapus listener setelah interaksi pertama (baik berhasil atau tidak, agar tidak mengganggu)
+                document.removeEventListener('click', fullscreenFallback);
+                document.removeEventListener('touchstart', fullscreenFallback);
+                document.removeEventListener('keydown', fullscreenFallback);
+            };
+            document.addEventListener('click', fullscreenFallback);
+            document.addEventListener('touchstart', fullscreenFallback);
+            document.addEventListener('keydown', fullscreenFallback);
         } catch (error) {
             loadingOverlay.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
         }
