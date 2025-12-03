@@ -62,8 +62,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Event listener untuk search surah
             surahSearch.addEventListener('input', (e) => filterSurahList(e.target.value));
 
-            // Auto-play saat page load (jika browser mengizinkan)
+            // Auto-play & Fullscreen saat page load (jika browser mengizinkan)
             setTimeout(() => {
+                toggleFullScreen(); // Coba masuk fullscreen
                 playFullSurah();
             }, 1000); // Delay sedikit untuk memastikan DOM siap dan interaksi minimal (meski auto-play policy mungkin tetap memblokir)
         } catch (error) {
